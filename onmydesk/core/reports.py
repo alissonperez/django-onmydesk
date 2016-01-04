@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from reports.core import datasets
-from reports.core import outputs
+from onmydesk.core import datasets
+from onmydesk.core import outputs
 
 
 class BaseReport(metaclass=ABCMeta):

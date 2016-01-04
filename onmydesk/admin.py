@@ -4,7 +4,7 @@ from django.contrib import admin
 from django import forms
 from django.conf import settings
 
-from reports import models, utils
+from onmydesk import models, utils
 
 
 def get_result_link(result):
@@ -105,7 +105,7 @@ def _get_report_class_name(request, default=None):
 
 class ReportAdmin(admin.ModelAdmin):
     class Media:
-        js = ('js/reports/common.js',)
+        js = ('js/onmydesk/common.js',)
 
     form = BaseReportAdminForm
 

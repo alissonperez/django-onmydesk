@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 
-from reports.utils import my_import
+from onmydesk.utils import my_import
 
 
 def output_file_handler(filepath):

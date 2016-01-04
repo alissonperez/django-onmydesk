@@ -1,4 +1,4 @@
-Django - Reporting
+Django - OnMyDesk
 ===================
 
 A simple Django app to build reports.
@@ -6,11 +6,11 @@ A simple Django app to build reports.
 Quick start
 ------------
 
-1. Add "reports" to your INSTALLED_APPS setting like this:
+1. Add "onmydesk" to your INSTALLED_APPS setting like this:
 
     INSTALLED_APPS = [
         ...
-        'reports',
+        'onmydesk',
     ]
 
 2. Run `python manage.py migrate` to create the polls models.

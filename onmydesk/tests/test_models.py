@@ -2,16 +2,16 @@ from unittest import mock
 
 from django.test import TestCase
 
-from reports.models import Report, output_file_handler
+from onmydesk.models import Report, output_file_handler
 
 
 class OutputFileHandlerTestCase(TestCase):
 
     def test_call_must_return_filepath_changed(self):
         my_handler = 'path.to.my.handler'
-        with mock.patch('reports.models.settings.REPORT_FILE_HANDLER', my_handler):
+        with mock.patch('onmydesk.models.settings.REPORT_FILE_HANDLER', my_handler):
             my_handler_mocked = mock.MagicMock(return_value='/tmp/filepath-changed.tsv')
-            with mock.patch('reports.models.my_import', return_value=my_handler_mocked) as my_import_mocked:
+            with mock.patch('onmydesk.models.my_import', return_value=my_handler_mocked) as my_import_mocked:
                 self.assertEqual(
                     output_file_handler('/tmp/filepath.tsv'),
                     '/tmp/filepath-changed.tsv')
@@ -20,7 +20,7 @@ class OutputFileHandlerTestCase(TestCase):
         my_handler_mocked.assert_called_once_with('/tmp/filepath.tsv')
 
     def test_call_must_return_same_filepath_if_a_file_handler_not_exists(self):
-        with mock.patch('reports.models.settings.REPORT_FILE_HANDLER', None):
+        with mock.patch('onmydesk.models.settings.REPORT_FILE_HANDLER', None):
             self.assertEqual(output_file_handler('/tmp/filepath.tsv'), '/tmp/filepath.tsv')
 
 
@@ -30,12 +30,12 @@ class ReportTestCase(TestCase):
         def my_output_file_handler(filepath):
             return filepath
 
-        self.patch('reports.models.output_file_handler', my_output_file_handler)
+        self.patch('onmydesk.models.output_file_handler', my_output_file_handler)
 
         self.report_instance = mock.MagicMock()
         self.report_instance.output_filepaths = ['/tmp/flunfa.tsv']
         self.report_class = mock.MagicMock(return_value=self.report_instance)
-        self.my_import_mocked = self.patch('reports.models.my_import', return_value=self.report_class)
+        self.my_import_mocked = self.patch('onmydesk.models.my_import', return_value=self.report_class)
 
     def test_process_must_call_process_from_report_class(self):
         report = Report(report='my_report_class')

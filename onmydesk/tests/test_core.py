@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from django.test import TestCase
 
-from reports.core import datasets, outputs, reports
+from onmydesk.core import datasets, outputs, reports
 
 
 class SQLDatasetTestCase(TestCase):
@@ -11,7 +11,7 @@ class SQLDatasetTestCase(TestCase):
     def test_iterate_must_return_next_row(self):
         mocked_cursor = self._create_mocked_cursor()
 
-        with mock.patch('reports.core.datasets.connection.cursor', return_value=mocked_cursor):
+        with mock.patch('onmydesk.core.datasets.connection.cursor', return_value=mocked_cursor):
             dataset = datasets.SQLDataset('SELECT * FROM flunfa')
 
             with dataset:
@@ -29,7 +29,7 @@ class SQLDatasetTestCase(TestCase):
     def test_iterate_must_call_execute_with_query_params(self):
         mocked_cursor = self._create_mocked_cursor()
 
-        with mock.patch('reports.core.datasets.connection.cursor', return_value=mocked_cursor):
+        with mock.patch('onmydesk.core.datasets.connection.cursor', return_value=mocked_cursor):
             dataset = datasets.SQLDataset('SELECT * FROM flunfa WHERE id = %s', [1])
             with dataset:
                 for i in dataset.iterate():
@@ -57,12 +57,12 @@ class TSVOutputTestCase(TestCase):
 
     def setUp(self):
         self.gettempdirmocked = self.patch(
-            'reports.core.outputs.tempfile.gettempdir', return_value='/tmp')
+            'onmydesk.core.outputs.tempfile.gettempdir', return_value='/tmp')
 
         uuid4_mocked = mock.MagicMock()
         uuid4_mocked.hex = 'asjkdlajksdlakjdlakjsdljalksdjla'
         self.uuid4_mocked = self.patch(
-            'reports.core.outputs.uuid4', return_value=uuid4_mocked)
+            'onmydesk.core.outputs.uuid4', return_value=uuid4_mocked)
 
         self.open_mocked = mock.mock_open()
         self.patch('builtins.open', self.open_mocked)
@@ -147,7 +147,7 @@ class CSVOutputTestCase(TestCase):
 
     def setUp(self):
         self.gettempdirmocked = self.patch(
-            'reports.core.outputs.tempfile.gettempdir', return_value='/tmp')
+            'onmydesk.core.outputs.tempfile.gettempdir', return_value='/tmp')
 
         self.test_dataset = mock.MagicMock()
         self.test_dataset.iterate.return_value = [
@@ -159,13 +159,13 @@ class CSVOutputTestCase(TestCase):
         self.patch('builtins.open', self.open_mocked)
 
         self.writer_mocked = mock.MagicMock()
-        self.patch('reports.core.outputs.csv.writer',
+        self.patch('onmydesk.core.outputs.csv.writer',
                    return_value=self.writer_mocked)
 
         uuid4_mocked = mock.MagicMock()
         uuid4_mocked.hex = 'asjkdlajksdlakjdlakjsdljalksdjla'
         self.uuid4_mocked = self.patch(
-            'reports.core.outputs.uuid4', return_value=uuid4_mocked)
+            'onmydesk.core.outputs.uuid4', return_value=uuid4_mocked)
 
     def patch(self, *args, **kwargs):
         patcher = mock.patch(*args, **kwargs)
@@ -234,10 +234,10 @@ class SQLReportTestCase(TestCase):
 
     def setUp(self):
         self.sqldataset_mocked = mock.MagicMock()
-        self.patch('reports.core.reports.datasets.SQLDataset',
+        self.patch('onmydesk.core.reports.datasets.SQLDataset',
                    return_value=self.sqldataset_mocked)
 
-        self.tsvoutput_mocked = self.patch('reports.core.reports.outputs.TSVOutput')
+        self.tsvoutput_mocked = self.patch('onmydesk.core.reports.outputs.TSVOutput')
         self.tsvoutput_mocked.filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv'
 
     def patch(self, *args, **kwargs):
