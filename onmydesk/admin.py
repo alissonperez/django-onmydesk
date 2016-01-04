@@ -105,7 +105,7 @@ def _get_report_class_name(request, default=None):
 
 class ReportAdmin(admin.ModelAdmin):
     class Media:
-        js = ('js/onmydesk/common.js',)
+        js = ('onmydesk/js/common.js',)
 
     form = BaseReportAdminForm
 
