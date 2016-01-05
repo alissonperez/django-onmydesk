@@ -9,7 +9,7 @@ class OutputFileHandlerTestCase(TestCase):
 
     def test_call_must_return_filepath_changed(self):
         my_handler = 'path.to.my.handler'
-        with mock.patch('onmydesk.models.settings.REPORT_FILE_HANDLER', my_handler):
+        with mock.patch('onmydesk.models.REPORT_FILE_HANDLER', my_handler):
             my_handler_mocked = mock.MagicMock(return_value='/tmp/filepath-changed.tsv')
             with mock.patch('onmydesk.models.my_import', return_value=my_handler_mocked) as my_import_mocked:
                 self.assertEqual(
@@ -20,7 +20,7 @@ class OutputFileHandlerTestCase(TestCase):
         my_handler_mocked.assert_called_once_with('/tmp/filepath.tsv')
 
     def test_call_must_return_same_filepath_if_a_file_handler_not_exists(self):
-        with mock.patch('onmydesk.models.settings.REPORT_FILE_HANDLER', None):
+        with mock.patch('onmydesk.models.REPORT_FILE_HANDLER', None):
             self.assertEqual(output_file_handler('/tmp/filepath.tsv'), '/tmp/filepath.tsv')
 
 
