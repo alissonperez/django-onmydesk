@@ -12,6 +12,15 @@ Or with requirements.txt file::
 
   -e git+git@github.com:knowledge4life/django-onmydesk.git@master#egg=django-onmydesk
 
+Add 'onmydesk' to your INSTALLED_APPS::
+
+  INSTALLED_APPS = [
+      # ...
+      'onmydesk',
+  ]
+
+Run `./manage.py migrate` to create **OnMyDesk** models.
+
 Quickstart
 -----------
 
