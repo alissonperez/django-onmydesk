@@ -8,7 +8,7 @@ from onmydesk import models, utils
 
 
 def get_result_link(result):
-    link_handler = getattr(settings, 'REPORT_DOWNLOAD_LINK_HANDLER', None)
+    link_handler = getattr(settings, 'ONMYDESK_DOWNLOAD_LINK_HANDLER', None)
     if not link_handler:
         return '#'
 
@@ -36,7 +36,7 @@ results.allow_tags = True
 
 
 def reports_available():
-    report_class_list = getattr(settings, 'REPORT_CLASS_LIST', [])
+    report_class_list = getattr(settings, 'ONMYDESK_REPORT_LIST', [])
 
     report_list = []
 

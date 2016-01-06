@@ -3,11 +3,11 @@ from django.conf import settings
 
 from onmydesk.utils import my_import
 
-REPORT_FILE_HANDLER = getattr(settings, 'REPORT_FILE_HANDLER', None)
+ONMYDESK_FILE_HANDLER = getattr(settings, 'ONMYDESK_FILE_HANDLER', None)
 
 
 def output_file_handler(filepath):
-    function_handler = REPORT_FILE_HANDLER
+    function_handler = ONMYDESK_FILE_HANDLER
 
     if not function_handler:
         return filepath
