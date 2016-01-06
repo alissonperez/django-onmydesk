@@ -24,6 +24,7 @@ build/
 dist/
 /.cache
 /.tox
+/docs/_*
 
 # Logs
 var/*.log
