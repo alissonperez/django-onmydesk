@@ -25,4 +25,4 @@ install:
 	pip install dist/*.tar.gz
 
 test:
-	py.test
+	tox
