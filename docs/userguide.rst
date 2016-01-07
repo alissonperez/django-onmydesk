@@ -6,7 +6,7 @@ Installation
 
 With pip over ssh::
 
-  pip install -e git+git@github.com:knowledge4life/django-onmydesk.git@develop#egg=django-onmydesk
+  pip install -e git+git@github.com:knowledge4life/django-onmydesk.git@master#egg=django-onmydesk
 
 Or with requirements.txt file::
 
