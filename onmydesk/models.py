@@ -34,7 +34,7 @@ def output_file_handler(filepath):
 class Report(models.Model):
     """Report model to store generated reports"""
 
-    report = models.CharField(max_length=30)
+    report = models.CharField(max_length=255)
     results = models.CharField(max_length=255, null=True, blank=True)
 
     insert_date = models.DateTimeField('Creation Date', auto_now_add=True)
