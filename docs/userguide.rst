@@ -35,7 +35,7 @@ Create a module called *reports.py* in you django app with the following content
 
 myapp/reports.py::
 
-    from reports.core import reports
+    from onmydesk.core import reports
 
     class UsersReport(reports.SQLReport):
         name = 'Users report'
@@ -63,7 +63,7 @@ To do this, we can create a Django form to our report that will be showed to use
 
 For example, with this changes our *report.py* should be like this::
 
-    from reports.core import reports
+    from onmydesk.core import reports
 
     from django import forms
     from django.contrib.admin.widgets import AdminDateWidget
@@ -81,6 +81,9 @@ For example, with this changes our *report.py* should be like this::
 
 	query = 'SELECT * FROM auth_user WHERE date_joined between %s and %s'
 
+	# Optionally we can use a db alias to change our database.
+	db_alias = 'my-other-database'
+
 	@property
 	def query_params(self):
 	    return [
@@ -97,7 +100,7 @@ We aren't restricted by raw database sql queries (and we know that, by some reas
 
 Reports in **OnMyDesk** are composed by Datasets and Outputs (we'll take a better look on both ahead). So, if you need to get your data by your own way you can create a Dataset. E.g.::
 
-    from reports.core import reports, datasets, outputs
+    from onmydesk.core import reports, datasets, outputs
 
 
     class TotalsDataset(datasets.BaseDataset):
