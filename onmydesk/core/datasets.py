@@ -60,14 +60,16 @@ class SQLDataset(BaseDataset):
 
     """
 
-    def __init__(self, query, query_params=[]):
+    def __init__(self, query, query_params=[], db_alias=None):
         """
         :param str query: Raw sql query.
         :param list query_params: Params to be evaluated with query.
+        :param str db_alias: Database alias from django settings. Optional.
         """
 
         self.query = query
         self.query_params = query_params
+        self.db_alias = db_alias
 
     def iterate(self):
         """
@@ -87,7 +89,11 @@ class SQLDataset(BaseDataset):
 
     def __enter__(self):
         """*Enter* from context manager to open a cursor with database"""
-        self.cursor = connection.cursor()
+        if self.db_alias:
+            self.cursor = connection[self.db_alias].cursor()
+        else:
+            self.cursor = connection.cursor()
+
         return self
 
     def __exit__(self, type, value, traceback):

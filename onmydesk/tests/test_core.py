@@ -37,6 +37,21 @@ class SQLDatasetTestCase(TestCase):
 
         mocked_cursor.execute.assert_called_once_with('SELECT * FROM flunfa WHERE id = %s', [1])
 
+    def test_iterate_must_call_correct_db_alias(self):
+        db_alias = 'my-db-alias'
+        my_connection = mock.MagicMock()
+        my_connection.cursor.return_value = self._create_mocked_cursor()
+
+        connections = {db_alias: my_connection}
+
+        with mock.patch('onmydesk.core.datasets.connection', connections):
+            dataset = datasets.SQLDataset('SELECT * FROM flunfa WHERE id = %s', [1], db_alias=db_alias)
+            with dataset:
+                for i in dataset.iterate():
+                    pass
+
+        self.assertTrue(my_connection.cursor.called)
+
     def _create_mocked_cursor(self):
         mocked_cursor = mock.MagicMock()
 
