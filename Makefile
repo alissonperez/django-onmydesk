@@ -4,6 +4,7 @@ help:
 	@echo "  migrations	=> to make model migrations"
 	@echo "  clean		=> to clean clean all automatically generated files"
 	@echo "  install 	=> to build, uninstall and install package in current pip"
+	@echo "  generate-docs 	=> Regenerate docs"
 
 clean:
 	find . -name \*.pyc -delete
@@ -30,3 +31,12 @@ install:
 
 test:
 	tox
+
+# ========== Docs targets ==========
+
+generate-docs: # Generate html docs
+	@echo ""
+	@echo "\033[32mRegenerating docs\033[0m"
+	@echo ""
+	rm -rf docs/_build/*
+	make html -C ./docs
