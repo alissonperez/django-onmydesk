@@ -104,6 +104,9 @@ class SQLReport(BaseReport):
     outputs = (outputs.TSVOutput(),)
     """Outputs list, default TSV."""
 
+    db_alias = None
+    """Database alias from django config to be used with queries"""
+
     @property
     def dataset(self):
-        return datasets.SQLDataset(self.query, self.query_params)
+        return datasets.SQLDataset(self.query, self.query_params, self.db_alias)

@@ -249,8 +249,8 @@ class SQLReportTestCase(TestCase):
 
     def setUp(self):
         self.sqldataset_mocked = mock.MagicMock()
-        self.patch('onmydesk.core.reports.datasets.SQLDataset',
-                   return_value=self.sqldataset_mocked)
+        self.sqldataset_class_mocked = self.patch('onmydesk.core.reports.datasets.SQLDataset',
+                                                  return_value=self.sqldataset_mocked)
 
         self.tsvoutput_mocked = self.patch('onmydesk.core.reports.outputs.TSVOutput')
         self.tsvoutput_mocked.filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv'
@@ -281,6 +281,15 @@ class SQLReportTestCase(TestCase):
         report.process()
 
         self.assertEqual(self.tsvoutput_mocked.row_cleaner, report.row_cleaner)
+
+    def test_dataset_attr_must_return_dataset_with_db_alias_from_report(self):
+        report = self._create_report()
+        report.db_alias = 'my-db-alias'
+
+        report.dataset
+
+        self.sqldataset_class_mocked.assert_called_once_with(
+            report.query, report.query_params, 'my-db-alias')
 
     def _create_report(self):
         report = reports.SQLReport()
