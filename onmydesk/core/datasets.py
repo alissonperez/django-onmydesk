@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
 
-from django.db import connection
+from django.db import connection, connections
 
 
 class BaseDataset(metaclass=ABCMeta):
@@ -90,7 +90,7 @@ class SQLDataset(BaseDataset):
     def __enter__(self):
         """*Enter* from context manager to open a cursor with database"""
         if self.db_alias:
-            self.cursor = connection[self.db_alias].cursor()
+            self.cursor = connections[self.db_alias].cursor()
         else:
             self.cursor = connection.cursor()
 

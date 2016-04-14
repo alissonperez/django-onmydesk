@@ -44,7 +44,7 @@ class SQLDatasetTestCase(TestCase):
 
         connections = {db_alias: my_connection}
 
-        with mock.patch('onmydesk.core.datasets.connection', connections):
+        with mock.patch('onmydesk.core.datasets.connections', connections):
             dataset = datasets.SQLDataset('SELECT * FROM flunfa WHERE id = %s', [1], db_alias=db_alias)
             with dataset:
                 for i in dataset.iterate():
