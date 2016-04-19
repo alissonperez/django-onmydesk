@@ -138,3 +138,39 @@ class Report(models.Model):
             return []
 
         return self.results.split(';')
+
+
+class Scheduler(models.Model):
+
+    PER_MON_FRI = 'mon_fri'
+    PER_MON_SUN = 'mon_sun'
+    PER_SUN = 'sun'
+    PER_MON = 'mon'
+    PER_TUE = 'tue'
+    PER_WED = 'wed'
+    PER_THU = 'thu'
+    PER_FRI = 'fri'
+    PER_SAT = 'sat'
+
+    PERIODICITIES = (
+        (PER_MON_FRI, 'Monday to Friday'),
+        (PER_MON_SUN, 'Monday to Sunday'),
+        (PER_SUN, 'Every Sunday'),
+        (PER_MON, 'Every Monday'),
+        (PER_TUE, 'Every Tuesday'),
+        (PER_WED, 'Every Wednesday'),
+        (PER_THU, 'Every Thursday'),
+        (PER_FRI, 'Every Friday'),
+        (PER_SAT, 'Every Saturday'),
+    )
+
+    report = models.CharField(max_length=255)
+    periodicity = models.CharField(max_length=20, choices=PERIODICITIES)
+
+    params = models.BinaryField(verbose_name='Parameters', null=True, blank=True)
+
+    insert_date = models.DateTimeField('Creation Date', auto_now_add=True)
+    update_date = models.DateTimeField('Update Date', auto_now=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
