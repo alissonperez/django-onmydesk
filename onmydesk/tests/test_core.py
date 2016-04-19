@@ -245,6 +245,86 @@ class CSVOutputTestCase(TestCase):
         self.assertEqual(self.writer_mocked.writerow.mock_calls, expected_calls)
 
 
+class XLSXOutputTestCase(TestCase):
+
+    def setUp(self):
+        self.gettempdirmocked = self._patch(
+            'onmydesk.core.outputs.tempfile.gettempdir', return_value='/tmp')
+
+        self.worksheet_mocked = mock.MagicMock()
+        self.workbook_mocked = mock.MagicMock()
+        self.workbook_mocked.add_worksheet.return_value = self.worksheet_mocked
+        self.workbook_const_mocked = self._patch('onmydesk.core.outputs.xlsxwriter.Workbook',
+                                                 return_value=self.workbook_mocked)
+
+        self.test_dataset = mock.MagicMock()
+        self.test_dataset.iterate.return_value = [
+            ('Alisson', 38),
+            ('Joao', 13),
+        ]
+
+        uuid4_mocked = mock.MagicMock()
+        uuid4_mocked.hex = 'asjkdlajksdlakjdlakjsdljalksdjla'
+        self.uuid4_mocked = self._patch(
+            'onmydesk.core.outputs.uuid4', return_value=uuid4_mocked)
+
+    def _patch(self, *args, **kwargs):
+        patcher = mock.patch(*args, **kwargs)
+        thing = patcher.start()
+        self.addCleanup(patcher.stop)
+        return thing
+
+    def test_call_process_must_call_lib_constructor(self):
+        outputs.XLSXOutput().process(self.test_dataset)
+
+        self.workbook_const_mocked.assert_called_once_with(
+            '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.xlsx')
+
+    def test_call_process_must_call_workbook_add_worksheet(self):
+        outputs.XLSXOutput().process(self.test_dataset)
+        self.assertTrue(self.workbook_mocked.add_worksheet.called)
+
+    def test_call_process_must_call_add_format_to_header_and_footer(self):
+        outputs.XLSXOutput().process(self.test_dataset)
+
+        calls = [
+            mock.call({'bold': True, 'bg_color': '#C9C9C9'}),  # header
+            mock.call({'bold': True, 'bg_color': '#DDDDDD'}),  # Footer
+        ]
+
+        self.assertEqual(self.workbook_mocked.add_format.mock_calls, calls)
+
+    def test_call_process_must_call_write(self):
+        outputs.XLSXOutput().process(self.test_dataset)
+
+        expected_calls = [
+            mock.call(0, 0, ['Alisson', '38']),
+            mock.call(1, 0, ['Joao', '13'])
+        ]
+
+        self.assertEqual(self.worksheet_mocked.write_row.mock_calls, expected_calls)
+
+    def test_call_process_with_header_and_footer_must_call_write_with_correct_format(self):
+        header_format = mock.MagicMock()
+        footer_format = mock.MagicMock()
+
+        self.workbook_mocked.add_format.side_effect = [header_format, footer_format]
+        outputs.XLSXOutput().process(self.test_dataset, header=['Name', 'Age'], footer=['Total', 51])
+
+        first_call, *_, last_call = self.worksheet_mocked.write_row.mock_calls
+
+        # Header
+        self.assertEqual(first_call, mock.call(0, 0, ['Name', 'Age'], header_format))
+
+        # Footer (1 of header and the content's length)
+        footer_line = 1 + 2
+        self.assertEqual(last_call, mock.call(footer_line, 0, ['Total', '51'], footer_format))
+
+    def test_call_process_must_call_close(self):
+        outputs.XLSXOutput().process(self.test_dataset)
+        self.assertTrue(self.workbook_mocked.close.called)
+
+
 class SQLReportTestCase(TestCase):
 
     def setUp(self):

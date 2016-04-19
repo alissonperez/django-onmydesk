@@ -18,6 +18,9 @@ setup(
     url='https://github.com/knowledge/knowledge4life/',
     author='Alisson R. Perez',
     author_email='alisson.perez@knowledge4.life',
+    install_requires=[
+        'XlsxWriter==0.8.3',  # Used by XLSXOutput
+    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

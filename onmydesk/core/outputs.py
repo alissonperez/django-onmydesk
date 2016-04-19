@@ -1,5 +1,6 @@
 import tempfile
 import csv
+import xlsxwriter
 
 from uuid import uuid4
 from abc import ABCMeta, abstractmethod
@@ -37,6 +38,13 @@ class TSVOutput(BaseOutput):
     """An output to generate TSV files (files with cols separated by tabs)."""
 
     def process(self, dataset, header=None, footer=None):
+        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+
+        :param Dataset dataset: A dataset to be used by output.
+        :param header: Output header.
+        :param footer: Output footer.
+        """
+
         self.filepath = self.gen_tmpfilename()
 
         tmpfile = open(self.filepath, 'w+')
@@ -73,6 +81,13 @@ class CSVOutput(BaseOutput):
     """An output to generate CSV files (files with cols separated by comma)."""
 
     def process(self, dataset, header=None, footer=None):
+        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+
+        :param Dataset dataset: A dataset to be used by output.
+        :param header: Output header.
+        :param footer: Output footer.
+        """
+
         self.filepath = self.gen_tmpfilename()
 
         tmpfile = open(self.filepath, 'w+')
@@ -103,3 +118,54 @@ class CSVOutput(BaseOutput):
         :rtype: str"""
 
         return super().gen_tmpfilename() + '.csv'
+
+
+class XLSXOutput(BaseOutput):
+    """Output to generate XLSX files."""
+
+    def process(self, dataset, header=None, footer=None):
+        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+
+        :param Dataset dataset: A dataset to be used by output.
+        :param header: Output header.
+        :param footer: Output footer.
+        """
+
+        self.filepath = self.gen_tmpfilename()
+        workbook = xlsxwriter.Workbook(self.filepath)
+        worksheet = workbook.add_worksheet()
+
+        header_format = workbook.add_format({'bold': True, 'bg_color': '#C9C9C9'})
+        footer_format = workbook.add_format({'bold': True, 'bg_color': '#DDDDDD'})
+
+        current_row = 0
+        if header:
+            worksheet.write_row(current_row, 0, [str(i) for i in header], header_format)
+            current_row += 1
+
+        for row_num, row in enumerate(dataset.iterate(), start=current_row):
+            if self.row_cleaner:
+                row = self.row_cleaner(row)
+
+            if isinstance(row, dict):
+                values = [str(a) for a in row.values()]
+            else:
+                values = [str(b) for b in row]
+
+            worksheet.write_row(row_num, 0, values)
+
+            current_row = row_num
+
+        if footer:
+            current_row += 1
+            worksheet.write_row(current_row, 0, [str(i) for i in footer], footer_format)
+
+        workbook.close()
+
+    def gen_tmpfilename(self):
+        """It generates and returns a XLSX temporary file.
+
+        :returns: Temporary XLSX file.
+        :rtype: str"""
+
+        return super().gen_tmpfilename() + '.xlsx'

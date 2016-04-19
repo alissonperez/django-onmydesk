@@ -129,6 +129,21 @@ Reports in **OnMyDesk** are composed by Datasets and Outputs (we'll take a bette
 
 We just need to return an interable object in iterate method from our dataset.
 
+Changing report's outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We can change the output of our report. The easier way to do this is to change `outputs` attribute of our report class.
+
+Example::
+
+    class TotalsReport(reports.BaseReport):
+	name = 'Users - Totals'
+
+	# Changing our outputs to TSV and XLSx
+	outputs = (outputs.TSVOutput(), outputs.XLSXOutput())
+
+We have some output options by default. See more about on :py:mod:`onmydesk.core.outputs`.
+
 
 Settings
 ---------
