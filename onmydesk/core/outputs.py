@@ -127,9 +127,9 @@ class XLSXOutput(BaseOutput):
                 row = self.row_cleaner(row)
 
             if isinstance(row, dict):
-                values = [str(a) for a in row.values()]
+                values = [a for a in row.values()]
             else:
-                values = [str(b) for b in row]
+                values = [b for b in row]
 
             worksheet.write_row(row_num, 0, values)
 

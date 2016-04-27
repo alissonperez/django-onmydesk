@@ -297,8 +297,8 @@ class XLSXOutputTestCase(TestCase):
         outputs.XLSXOutput().process(self.iterable_object)
 
         expected_calls = [
-            mock.call(0, 0, ['Alisson', '38']),
-            mock.call(1, 0, ['Joao', '13'])
+            mock.call(0, 0, ['Alisson', 38]),
+            mock.call(1, 0, ['Joao', 13])
         ]
 
         self.assertEqual(self.worksheet_mocked.write_row.mock_calls, expected_calls)
