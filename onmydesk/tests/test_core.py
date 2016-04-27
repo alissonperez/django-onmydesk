@@ -82,6 +82,9 @@ class TSVOutputTestCase(TestCase):
         self.open_mocked = mock.mock_open()
         self.patch('builtins.open', self.open_mocked)
 
+        self.writer = mock.MagicMock()
+        self.patch('onmydesk.core.outputs.csv.writer', return_value=self.writer)
+
         self.test_dataset = mock.MagicMock()
         self.test_dataset.iterate.return_value = [
             ('Alisson', 38),
@@ -100,21 +103,25 @@ class TSVOutputTestCase(TestCase):
 
         self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv')
 
-    def test_process_must_write_data_into_a_file(self):
+    def test_process_must_call_open_with_correct_parameters(self):
+        output = outputs.TSVOutput()
+        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+
+        self.open_mocked.assert_called_once_with(
+            '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+')
+
+    def test_process_must_write_correct_data_in_csv_writer(self):
         output = outputs.TSVOutput()
         output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
-            mock.call('/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+'),
-            mock.call().__enter__(),
-            mock.call().write('Name\tAge\n'),
-            mock.call().write('Alisson\t38\n'),
-            mock.call().write('Joao\t13\n'),
-            mock.call().write('test footer\n'),
-            mock.call().__exit__(None, None, None)
+            mock.call(['Name', 'Age']),
+            mock.call(['Alisson', '38']),
+            mock.call(['Joao', '13']),
+            mock.call(['test footer']),
         ]
 
-        self.assertEqual(self.open_mocked.mock_calls, expected_calls)
+        self.assertEqual(self.writer.writerow.mock_calls, expected_calls)
 
     def test_process_with_dataset_with_ordered_dict_must_write_data_into_a_file(self):
         self.test_dataset.iterate.return_value = [
@@ -126,16 +133,13 @@ class TSVOutputTestCase(TestCase):
         output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
-            mock.call('/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+'),
-            mock.call().__enter__(),
-            mock.call().write('Name\tAge\n'),
-            mock.call().write('Alisson\t38\n'),
-            mock.call().write('Joao\t13\n'),
-            mock.call().write('test footer\n'),
-            mock.call().__exit__(None, None, None)
+            mock.call(['Name', 'Age']),
+            mock.call(['Alisson', '38']),
+            mock.call(['Joao', '13']),
+            mock.call(['test footer']),
         ]
 
-        self.assertEqual(self.open_mocked.mock_calls, expected_calls)
+        self.assertEqual(self.writer.writerow.mock_calls, expected_calls)
 
     def test_row_cleaner_must_change_row_content(self):
         def row_cleaner(row):
@@ -146,16 +150,13 @@ class TSVOutputTestCase(TestCase):
         output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
-            mock.call('/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+'),
-            mock.call().__enter__(),
-            mock.call().write('Name\tAge\n'),
-            mock.call().write('Test\t99\n'),
-            mock.call().write('Test\t99\n'),
-            mock.call().write('test footer\n'),
-            mock.call().__exit__(None, None, None)
+            mock.call(['Name', 'Age']),
+            mock.call(['Test', '99']),
+            mock.call(['Test', '99']),
+            mock.call(['test footer']),
         ]
 
-        self.assertEqual(self.open_mocked.mock_calls, expected_calls)
+        self.assertEqual(self.writer.writerow.mock_calls, expected_calls)
 
 
 class CSVOutputTestCase(TestCase):
