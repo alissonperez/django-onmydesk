@@ -39,8 +39,9 @@ class BaseReport(metaclass=ABCMeta):
 
         with self.dataset as ds:
             for output in self.outputs:
+                dataset_iterator = ds.iterate(params=self.params)
                 output.row_cleaner = self.row_cleaner
-                output.process(ds, header=self.header, footer=self.footer)
+                output.process(dataset_iterator, header=self.header, footer=self.footer)
                 self.output_filepaths.append(output.filepath)
 
     def row_cleaner(self, row):

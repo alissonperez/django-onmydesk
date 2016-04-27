@@ -64,7 +64,6 @@ class SQLDatasetTestCase(TestCase):
             ('Alisson', 25),
             ('Joao', 12),
         ]
-
         return mocked_cursor
 
 
@@ -85,8 +84,7 @@ class TSVOutputTestCase(TestCase):
         self.writer = mock.MagicMock()
         self.patch('onmydesk.core.outputs.csv.writer', return_value=self.writer)
 
-        self.test_dataset = mock.MagicMock()
-        self.test_dataset.iterate.return_value = [
+        self.iterable_object = [
             ('Alisson', 38),
             ('Joao', 13),
         ]
@@ -99,20 +97,20 @@ class TSVOutputTestCase(TestCase):
 
     def test_filepath_must_be_a_tsv_file(self):
         output = outputs.TSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'))
+        output.process(self.iterable_object, header=('Name', 'Age'))
 
         self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv')
 
     def test_process_must_call_open_with_correct_parameters(self):
         output = outputs.TSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         self.open_mocked.assert_called_once_with(
             '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+')
 
     def test_process_must_write_correct_data_in_csv_writer(self):
         output = outputs.TSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -124,13 +122,13 @@ class TSVOutputTestCase(TestCase):
         self.assertEqual(self.writer.writerow.mock_calls, expected_calls)
 
     def test_process_with_dataset_with_ordered_dict_must_write_data_into_a_file(self):
-        self.test_dataset.iterate.return_value = [
+        iterable_object = [
             OrderedDict([('name', 'Alisson'), ('age', 38)]),
             OrderedDict([('name', 'Joao'), ('age', 13)]),
         ]
 
         output = outputs.TSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -147,7 +145,7 @@ class TSVOutputTestCase(TestCase):
 
         output = outputs.TSVOutput()
         output.row_cleaner = row_cleaner
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -165,8 +163,7 @@ class CSVOutputTestCase(TestCase):
         self.gettempdirmocked = self.patch(
             'onmydesk.core.outputs.tempfile.gettempdir', return_value='/tmp')
 
-        self.test_dataset = mock.MagicMock()
-        self.test_dataset.iterate.return_value = [
+        self.iterable_object = [
             ('Alisson', 38),
             ('Joao', 13),
         ]
@@ -191,7 +188,7 @@ class CSVOutputTestCase(TestCase):
 
     def test_filepath_must_be_a_csv_file(self):
         output = outputs.CSVOutput()
-        output.process(self.test_dataset)
+        output.process(self.iterable_object)
 
         expected_filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.csv'
 
@@ -199,7 +196,9 @@ class CSVOutputTestCase(TestCase):
 
     def test_process_must_write_data_into_a_file(self):
         output = outputs.CSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(self.iterable_object,
+                       header=('Name', 'Age'),
+                       footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -211,13 +210,13 @@ class CSVOutputTestCase(TestCase):
         self.assertEqual(self.writer_mocked.writerow.mock_calls, expected_calls)
 
     def test_process_with_ordered_dict_dataset_must_write_into_a_file(self):
-        self.test_dataset.iterate.return_value = [
+        iterable_object = [
             OrderedDict([('name', 'Alisson'), ('age', 38)]),
             OrderedDict([('name', 'Joao'), ('age', 13)]),
         ]
 
         output = outputs.CSVOutput()
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -234,7 +233,7 @@ class CSVOutputTestCase(TestCase):
 
         output = outputs.CSVOutput()
         output.row_cleaner = row_cleaner
-        output.process(self.test_dataset, header=('Name', 'Age'), footer=('test footer',))
+        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -258,8 +257,7 @@ class XLSXOutputTestCase(TestCase):
         self.workbook_const_mocked = self._patch('onmydesk.core.outputs.xlsxwriter.Workbook',
                                                  return_value=self.workbook_mocked)
 
-        self.test_dataset = mock.MagicMock()
-        self.test_dataset.iterate.return_value = [
+        self.iterable_object = [
             ('Alisson', 38),
             ('Joao', 13),
         ]
@@ -276,17 +274,17 @@ class XLSXOutputTestCase(TestCase):
         return thing
 
     def test_call_process_must_call_lib_constructor(self):
-        outputs.XLSXOutput().process(self.test_dataset)
+        outputs.XLSXOutput().process(self.iterable_object)
 
         self.workbook_const_mocked.assert_called_once_with(
             '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.xlsx')
 
     def test_call_process_must_call_workbook_add_worksheet(self):
-        outputs.XLSXOutput().process(self.test_dataset)
+        outputs.XLSXOutput().process(self.iterable_object)
         self.assertTrue(self.workbook_mocked.add_worksheet.called)
 
     def test_call_process_must_call_add_format_to_header_and_footer(self):
-        outputs.XLSXOutput().process(self.test_dataset)
+        outputs.XLSXOutput().process(self.iterable_object)
 
         calls = [
             mock.call({'bold': True, 'bg_color': '#C9C9C9'}),  # header
@@ -296,7 +294,7 @@ class XLSXOutputTestCase(TestCase):
         self.assertEqual(self.workbook_mocked.add_format.mock_calls, calls)
 
     def test_call_process_must_call_write(self):
-        outputs.XLSXOutput().process(self.test_dataset)
+        outputs.XLSXOutput().process(self.iterable_object)
 
         expected_calls = [
             mock.call(0, 0, ['Alisson', '38']),
@@ -310,7 +308,7 @@ class XLSXOutputTestCase(TestCase):
         footer_format = mock.MagicMock()
 
         self.workbook_mocked.add_format.side_effect = [header_format, footer_format]
-        outputs.XLSXOutput().process(self.test_dataset, header=['Name', 'Age'], footer=['Total', 51])
+        outputs.XLSXOutput().process(self.iterable_object, header=['Name', 'Age'], footer=['Total', 51])
 
         first_call, *_, last_call = self.worksheet_mocked.write_row.mock_calls
 
@@ -322,14 +320,62 @@ class XLSXOutputTestCase(TestCase):
         self.assertEqual(last_call, mock.call(footer_line, 0, ['Total', '51'], footer_format))
 
     def test_call_process_must_call_close(self):
-        outputs.XLSXOutput().process(self.test_dataset)
+        outputs.XLSXOutput().process(self.iterable_object)
         self.assertTrue(self.workbook_mocked.close.called)
+
+
+class BaseReportTestCase(TestCase):
+
+    def setUp(self):
+        self.dataset_mocked = mock.MagicMock()
+        self.dataset_mocked.iterate.return_value = [
+            ('Alisson', 38),
+            ('Joao', 13),
+        ]
+        self.dataset_mocked.__enter__.return_value = self.dataset_mocked
+        self.output_mocked = self._patch('onmydesk.core.reports.outputs.TSVOutput')
+
+        self.header = ('Name', 'Age')
+        self.footer = ('My footer',)
+
+        self.my_report_class = type('my_report_class',
+                                    (reports.BaseReport,),
+                                    dict(dataset=self.dataset_mocked,
+                                         outputs=[self.output_mocked],
+                                         header=self.header,
+                                         footer=self.footer))
+
+        self.params = dict(age_filter=25)
+        self.report = self.my_report_class(params=self.params)
+
+    def _patch(self, *args, **kwargs):
+        patcher = mock.patch(*args, **kwargs)
+        thing = patcher.start()
+        self.addCleanup(patcher.stop)
+        return thing
+
+    def test_process_must_call_output_process_with_dataset(self):
+        self.report.process()
+
+        self.output_mocked.process.assert_called_once_with(
+            self.dataset_mocked.iterate.return_value,
+            header=self.header,
+            footer=self.footer)
+
+    def test_process_must_call_iterate_from_dataset_with_params(self):
+        self.report.process()
+        self.dataset_mocked.iterate.assert_called_once_with(params=self.params)
 
 
 class SQLReportTestCase(TestCase):
 
     def setUp(self):
         self.sqldataset_mocked = mock.MagicMock()
+        self.sqldataset_mocked.iterate.return_value = [
+            (1,),
+            (2,),
+        ]
+
         self.sqldataset_class_mocked = self.patch('onmydesk.core.reports.datasets.SQLDataset',
                                                   return_value=self.sqldataset_mocked)
 
@@ -342,14 +388,13 @@ class SQLReportTestCase(TestCase):
         self.addCleanup(patcher.stop)
         return thing
 
-    def test_process_will_call_output_with_dataset(self):
+    def test_process_must_call_output_with_dataset_iterator_result(self):
         report = self._create_report()
-
         report.process()
 
         with self.sqldataset_mocked as ds:
             self.tsvoutput_mocked.process.assert_called_once_with(
-                ds, header=report.header, footer=report.footer)
+                ds.iterate(), header=report.header, footer=report.footer)
 
     def test_process_must_fill_output_filepaths(self):
         report = self._create_report()

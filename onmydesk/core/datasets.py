@@ -11,7 +11,7 @@ class BaseDataset(metaclass=ABCMeta):
     override methods :func:`__enter__` to lock resources and :func:`__exit__` to free up them. E.g.::
 
         class MyDataset(BaseDataset):
-            def iterate(self):
+            def iterate(self, params=None):
                 return self.file.read()
 
             def __enter__(self):
@@ -26,8 +26,10 @@ class BaseDataset(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def iterate(self):
-        """It must returns any iterable object."""
+    def iterate(self, params=None):
+        """It must returns any iterable object.
+
+        :param dict params: Parameters to be used by dataset"""
 
         raise NotImplemented()
 
@@ -71,17 +73,17 @@ class SQLDataset(BaseDataset):
         self.query_params = query_params
         self.db_alias = db_alias
 
-    def iterate(self):
+    def iterate(self, params=None):
         """
+        :param dict params: Parameters to be used by dataset.
         :returns: Rows from query result.
         :rtype: Iterator with OrderedDict items.
         """
 
         self.cursor.execute(self.query, self.query_params)
-        one = self.cursor.fetchone()
-
         cols = tuple(c[0] for c in self.cursor.description)
 
+        one = self.cursor.fetchone()
         while one is not None:
             row = OrderedDict(zip(cols, one))
             yield row
@@ -89,6 +91,7 @@ class SQLDataset(BaseDataset):
 
     def __enter__(self):
         """*Enter* from context manager to open a cursor with database"""
+
         if self.db_alias:
             self.cursor = connections[self.db_alias].cursor()
         else:

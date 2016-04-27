@@ -17,10 +17,10 @@ class BaseOutput(metaclass=ABCMeta):
         self.row_cleaner = None
 
     @abstractmethod
-    def process(self, dataset, header=None, footer=None):
+    def process(self, iterator, header=None, footer=None):
         """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
-        :param Dataset dataset: A dataset to be used by output.
+        :param iterator iterator: A iterable object.
         :param header: Output header.
         :param footer: Output footer.
         """
@@ -35,11 +35,11 @@ class BaseOutput(metaclass=ABCMeta):
 
 
 class SVOutput(BaseOutput, metaclass=ABCMeta):
-    '''Separated values output'''
+    '''Abstract separated values output'''
 
     delimiter = None
 
-    def process(self, dataset, header=None, footer=None):
+    def process(self, iterator, header=None, footer=None):
         """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
         :param Dataset dataset: A dataset to be used by output.
@@ -56,7 +56,7 @@ class SVOutput(BaseOutput, metaclass=ABCMeta):
             if header:
                 writer.writerow([str(i) for i in header])
 
-            for row in dataset.iterate():
+            for row in iterator:
                 if self.row_cleaner:
                     row = self.row_cleaner(row)
 
@@ -102,7 +102,7 @@ class TSVOutput(SVOutput):
 class XLSXOutput(BaseOutput):
     """Output to generate XLSX files."""
 
-    def process(self, dataset, header=None, footer=None):
+    def process(self, iterator, header=None, footer=None):
         """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
         :param Dataset dataset: A dataset to be used by output.
@@ -122,7 +122,7 @@ class XLSXOutput(BaseOutput):
             worksheet.write_row(current_row, 0, [str(i) for i in header], header_format)
             current_row += 1
 
-        for row_num, row in enumerate(dataset.iterate(), start=current_row):
+        for row_num, row in enumerate(iterator, start=current_row):
             if self.row_cleaner:
                 row = self.row_cleaner(row)
 

@@ -105,7 +105,7 @@ Reports in **OnMyDesk** are composed by Datasets and Outputs (we'll take a bette
 
     class TotalsDataset(datasets.BaseDataset):
 
-	def iterate(self):
+	def iterate(self, params=None):
 	    return [
 		('Users', self._get_total_users()),
 		('Premium users', self._get_total_premium_users()),
