@@ -10,6 +10,10 @@ from onmydesk.utils import my_import
 ONMYDESK_FILE_HANDLER = getattr(settings, 'ONMYDESK_FILE_HANDLER', None)
 
 
+class ReportNotSavedException(Exception):
+    pass
+
+
 def output_file_handler(filepath):
     """
     Returns the output filepath (handled or not by an external function).
@@ -64,16 +68,30 @@ class Report(models.Model):
         :param dict report_params: Dictionary with params to be used for process report.
         """
 
+        if not self.id:
+            raise ReportNotSavedException()
+
+        self.status = Report.STATUS_PROCESSING
+        self.save(update_fields=['status'])
+
         report_class = my_import(self.report)
 
         report = report_class(params=report_params)
-        report.process()
 
-        results = []
-        for filepath in report.output_filepaths:
-            results.append(output_file_handler(filepath))
+        try:
+            report.process()
 
-        self.results = ';'.join(results)
+            results = []
+            for filepath in report.output_filepaths:
+                results.append(output_file_handler(filepath))
+
+            self.results = ';'.join(results)
+
+            self.status = Report.STATUS_PROCESSED
+            self.save(update_fields=['status'])
+        except Exception:
+            self.status = Report.STATUS_ERROR
+            self.save(update_fields=['status'])
 
     @property
     def results_as_list(self):

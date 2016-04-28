@@ -56,20 +56,6 @@ class BaseReportAdminForm(forms.ModelForm):
         model = models.Report
         exclude = []
 
-    def save(self, commit=True, *args, **kwargs):
-        instance = super().save(commit, *args, **kwargs)
-
-        if not instance.results:
-            data = copy.deepcopy(self.cleaned_data)
-            if 'report' in data:
-                del data['report']
-
-            instance.process(report_params=data)
-            if commit:
-                instance.save()
-
-        return instance
-
 
 def _get_report_admin_form(request):
     '''Returns admin form to report according with the request'''
@@ -119,10 +105,20 @@ class ReportAdmin(admin.ModelAdmin):
     readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by', results]
 
     def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
         if request.user:
             obj.created_by = request.user
 
-        return super().save_model(request, obj, form, change)
+        if not obj.results:
+            data = copy.deepcopy(form.cleaned_data)
+            if 'report' in data:
+                del data['report']
+
+            obj.process(report_params=data)
+            obj.save()
+
+        return obj
 
     def report_name(self, obj):
         if not getattr(self, '_reports_available_cache', None):
@@ -180,5 +176,6 @@ class ReportAdmin(admin.ModelAdmin):
                 pass
 
         return readonly_fields
+
 
 admin.site.register(models.Report, ReportAdmin)
