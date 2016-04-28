@@ -102,7 +102,8 @@ class ReportAdmin(admin.ModelAdmin):
     list_filter = ('report', 'status')
     search_fields = ('report', 'status')
 
-    readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by', results]
+    readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by',
+                       'process_time', results]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -149,7 +150,7 @@ class ReportAdmin(admin.ModelAdmin):
                 'fields': (results,)
             }),
             ('Lifecycle', {
-                'fields': ('insert_date', 'update_date', 'created_by')
+                'fields': ('insert_date', 'update_date', 'created_by', 'process_time')
             }),
         ]
 

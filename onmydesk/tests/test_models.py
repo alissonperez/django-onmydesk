@@ -1,6 +1,7 @@
 from unittest import mock
 from django.test import TestCase
 
+from decimal import Decimal, getcontext
 
 from onmydesk.models import Report, output_file_handler, ReportNotSavedException
 
@@ -102,6 +103,19 @@ class ReportTestCase(TestCase):
         report.process()
 
         self.assertEqual(report.status, Report.STATUS_ERROR)
+
+    def test_process_must_set_process_time(self):
+        getcontext().prec = 5
+        start = Decimal(10.0000)
+        end = Decimal(15.1234)
+        self.patch('onmydesk.models.timer', side_effect=[start, end])
+
+        report = Report(report='my_report_class')
+        report.save()
+        report.process()
+
+        self.assertEqual(report.process_time, end - start)
+
     def test_results_as_list_must_return_a_list(self):
         expected_results = [
             '/tmp/flunfa-2.tsv',

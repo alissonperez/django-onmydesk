@@ -5,6 +5,9 @@ Required models to handle and store generated reports.
 from django.db import models
 from django.conf import settings
 
+from timeit import default_timer as timer
+from decimal import Decimal, getcontext
+
 from onmydesk.utils import my_import
 
 ONMYDESK_FILE_HANDLER = getattr(settings, 'ONMYDESK_FILE_HANDLER', None)
@@ -51,6 +54,8 @@ class Report(models.Model):
     )
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    process_time = models.DecimalField(verbose_name='Process time (secs)', max_digits=10,
+                                       decimal_places=4, null=True, blank=True)
 
     report = models.CharField(max_length=255)
     results = models.CharField(max_length=255, null=True, blank=True)
@@ -79,7 +84,10 @@ class Report(models.Model):
         report = report_class(params=report_params)
 
         try:
+            getcontext().prec = 5
+            start = Decimal(timer())
             report.process()
+            self.process_time = Decimal(timer()) - start
 
             results = []
             for filepath in report.output_filepaths:
