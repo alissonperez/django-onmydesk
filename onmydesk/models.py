@@ -34,6 +34,20 @@ def output_file_handler(filepath):
 class Report(models.Model):
     """Report model to store generated reports"""
 
+    STATUS_PENDING = 'pending'
+    STATUS_PROCESSING = 'processing'
+    STATUS_PROCESSED = 'processed'
+    STATUS_ERROR = 'error'
+
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_PROCESSING, 'Processing'),
+        (STATUS_PROCESSED, 'Processed'),
+        (STATUS_ERROR, 'Error'),
+    )
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+
     report = models.CharField(max_length=255)
     results = models.CharField(max_length=255, null=True, blank=True)
 

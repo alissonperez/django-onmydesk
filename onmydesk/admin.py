@@ -111,12 +111,12 @@ class ReportAdmin(admin.ModelAdmin):
 
     model = models.Report
     ordering = ('-insert_date',)
-    list_display = ('id', 'report_name', 'insert_date', 'update_date')
+    list_display = ('id', 'report_name', 'insert_date', 'update_date', 'status')
     list_display_links = ('id', 'report_name',)
-    list_filter = ('report',)
-    search_fields = ('report',)
+    list_filter = ('report', 'status')
+    search_fields = ('report', 'status')
 
-    readonly_fields = ['results', 'insert_date', 'update_date', 'created_by', results]
+    readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by', results]
 
     def save_model(self, request, obj, form, change):
         if request.user:
@@ -147,7 +147,7 @@ class ReportAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldset = [
             ('Identification', {
-                'fields': ('report',)
+                'fields': ('report', 'status')
             }),
             ('Results', {
                 'fields': (results,)
