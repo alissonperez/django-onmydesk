@@ -56,6 +56,7 @@ class Report(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     process_time = models.DecimalField(verbose_name='Process time (secs)', max_digits=10,
                                        decimal_places=4, null=True, blank=True)
+    params = models.BinaryField(verbose_name='Report params', null=True, blank=True)
 
     report = models.CharField(max_length=255)
     results = models.CharField(max_length=255, null=True, blank=True)
