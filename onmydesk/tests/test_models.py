@@ -1,9 +1,12 @@
-from unittest import mock
-from django.test import TestCase
-
+import base64
+import pickle
+from datetime import datetime
 from decimal import Decimal, getcontext
+from django.test import TestCase
+from unittest import mock
 
-from onmydesk.models import Report, output_file_handler, ReportNotSavedException
+from onmydesk.models import (Report, ReportNotSavedException,
+                             output_file_handler)
 
 
 class OutputFileHandlerTestCase(TestCase):
@@ -84,7 +87,7 @@ class ReportTestCase(TestCase):
         except Exception:
             pass
 
-        report.refresh_from_db()
+        report = Report.objects.get(id=report.id)
         self.assertEqual(report.status, Report.STATUS_PROCESSING)
 
     def test_process_must_set_status_as_processed_after_report_process(self):
@@ -92,7 +95,7 @@ class ReportTestCase(TestCase):
         report.save()
         report.process()
 
-        report.refresh_from_db()
+        report = Report.objects.get(id=report.id)
         self.assertEqual(report.status, Report.STATUS_PROCESSED)
 
     def test_process_must_set_status_as_error_if_some_exception_is_raised(self):
@@ -132,6 +135,32 @@ class ReportTestCase(TestCase):
         report.results = ''
 
         self.assertEqual(report.results_as_list, [])
+
+    def test_set_params_must_serializer_info_and_store_on_params_attr(self):
+        report = Report(report='my_report_class')
+
+        self.assertIsNone(report.params)
+
+        params = {'param1': 1, 'somedate': datetime.now()}
+        expected_result = base64.b64encode(pickle.dumps(params))
+
+        report.set_params(params)
+
+        self.assertEqual(report.params, expected_result)
+
+    def test_get_params_must_return_unserialized_info(self):
+        params = {'param1': 1, 'somedate': datetime.now()}
+
+        report = Report(report='my_report_class')
+        report.params = base64.b64encode(pickle.dumps(params))
+
+        self.assertEqual(report.get_params(), params)
+
+    def test_get_params_returns_none_if_params_is_none(self):
+        report = Report(report='my_report_class')
+        report.params = None
+
+        self.assertIsNone(report.get_params())
 
     def patch(self, *args, **kwargs):
         patcher = mock.patch(*args, **kwargs)

@@ -1,6 +1,8 @@
 """
 Required models to handle and store generated reports.
 """
+import pickle
+import base64
 
 from django.db import models
 from django.conf import settings
@@ -66,6 +68,15 @@ class Report(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+
+    def set_params(self, params):
+        self.params = base64.b64encode(pickle.dumps(params))
+
+    def get_params(self):
+        if self.params:
+            return pickle.loads(base64.b64decode(self.params))
+
+        return None
 
     def process(self, report_params=None):
         """Process this report. After processing the outputs will be stored at `results`.
