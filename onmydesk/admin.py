@@ -116,7 +116,7 @@ class ReportAdmin(admin.ModelAdmin):
             if 'report' in data:
                 del data['report']
 
-            obj.process(report_params=data)
+            obj.set_params(data)
             obj.save()
 
         return obj
@@ -165,7 +165,6 @@ class ReportAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
-
         readonly_fields = list(set(readonly_fields))
 
         if obj and obj.pk:

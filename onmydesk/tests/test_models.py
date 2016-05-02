@@ -68,9 +68,13 @@ class ReportTestCase(TestCase):
 
     def test_process_with_params_must_call_report_constructor_with_these_params(self):
         report = Report(report='my_report_class')
-        report.save()
+
         params = {'type': 'whatever'}
-        report.process(report_params=params)
+
+        report.set_params(params)
+        report.save()
+
+        report.process()
 
         self.report_class.assert_called_once_with(params=params)
 
@@ -103,8 +107,8 @@ class ReportTestCase(TestCase):
 
         report = Report(report='my_report_class')
         report.save()
-        report.process()
 
+        self.assertRaises(Exception, report.process)
         self.assertEqual(report.status, Report.STATUS_ERROR)
 
     def test_process_must_set_process_time(self):

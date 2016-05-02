@@ -70,19 +70,26 @@ class Report(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
     def set_params(self, params):
+        """Set params to be used when report is processed
+
+        :param dict params: Dictionary with params to be used to process report.
+        """
+
         self.params = base64.b64encode(pickle.dumps(params))
 
     def get_params(self):
+        """Params to be used to process report.
+
+        :return: Report params"""
+
         if self.params:
             return pickle.loads(base64.b64decode(self.params))
 
         return None
 
-    def process(self, report_params=None):
+    def process(self):
         """Process this report. After processing the outputs will be stored at `results`.
         To access output results is recommended to use :func:`results_as_list`.
-
-        :param dict report_params: Dictionary with params to be used for process report.
         """
 
         if not self.id:
@@ -93,7 +100,7 @@ class Report(models.Model):
 
         report_class = my_import(self.report)
 
-        report = report_class(params=report_params)
+        report = report_class(params=self.get_params())
 
         try:
             getcontext().prec = 5
@@ -109,9 +116,10 @@ class Report(models.Model):
 
             self.status = Report.STATUS_PROCESSED
             self.save(update_fields=['status'])
-        except Exception:
+        except Exception as e:
             self.status = Report.STATUS_ERROR
             self.save(update_fields=['status'])
+            raise e
 
     @property
     def results_as_list(self):
