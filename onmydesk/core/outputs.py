@@ -139,6 +139,9 @@ class XLSXOutput(BaseOutput):
             current_row += 1
             worksheet.write_row(current_row, 0, [str(i) for i in footer], footer_format)
 
+        # Freeze first row
+        worksheet.freeze_panes(1, 0)
+
         workbook.close()
 
     def gen_tmpfilename(self):
