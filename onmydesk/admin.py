@@ -35,6 +35,24 @@ def results(obj):
 results.allow_tags = True
 
 
+def params(obj):
+    params = obj.get_params()
+    if not params:
+        return ''
+
+    params_list = []
+
+    for key, value in params.items():
+        str_param = '<li><strong>{}</strong>: {}</li>'.format(
+            key, str(value))
+
+        params_list.append(str_param)
+
+    return '<ul>{}</ul>'.format(''.join(params_list))
+params.allow_tags = True
+params.short_description = 'Parameters'
+
+
 def reports_available():
     report_class_list = getattr(settings, 'ONMYDESK_REPORT_LIST', [])
 
@@ -103,7 +121,7 @@ class ReportAdmin(admin.ModelAdmin):
     search_fields = ('report', 'status')
 
     readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by',
-                       'process_time', results]
+                       'process_time', results, params]
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -159,6 +177,10 @@ class ReportAdmin(admin.ModelAdmin):
         if form:
             fieldset.insert(1, ('Filters', {
                 'fields': form.base_fields.keys()
+            }))
+        else:
+            fieldset.insert(1, ('Filters', {
+                'fields': (params,)
             }))
 
         return fieldset
