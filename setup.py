@@ -20,6 +20,7 @@ setup(
     author_email='alisson.perez@knowledge4.life',
     install_requires=[
         'XlsxWriter==0.8.3',  # Used by XLSXOutput
+        'filelock==2.0.6',
     ],
     classifiers=[
         'Environment :: Web Environment',

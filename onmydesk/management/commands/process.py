@@ -1,4 +1,9 @@
+import tempfile
+from os import path
+
 from django.core.management.base import BaseCommand
+
+import filelock
 from onmydesk.models import Report
 
 
@@ -6,7 +11,19 @@ class Command(BaseCommand):
     help = 'Process pending reports'
 
     def handle(self, *args, **options):
-        items = Report.objects.filter(status=Report.STATUS_PENDING)
+        try:
+            self._process_with_lock()
+        except Exception as e:
+            self.stdout.write('Error: {}'.format(str(e)))
+
+    def _process_with_lock(self):
+        lock = filelock.FileLock(self._get_lock_filepath())
+
+        with lock.acquire(timeout=10):
+            self._process_reports()
+
+    def _process_reports(self):
+        items = Report.objects.filter(status=Report.STATUS_PENDING)[:10]
 
         count = len(items)
 
@@ -22,3 +39,6 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stderr.write('Error processing report #{}: {}'.format(
                     report.id, str(e)))
+
+    def _get_lock_filepath(self):
+        return path.join(tempfile.gettempdir(), 'onmydesk-report-processor-lock')
