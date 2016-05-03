@@ -1,0 +1,12 @@
+.onm-label {
+    background-color: #CCC;
+    color: #FFF;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    text-transform: capitalize;
+}
+
+.onm-label-warning {background-color: #e6b800}
+.onm-label-error {background-color: #cc2900}
+.onm-label-success {background-color: #008000}

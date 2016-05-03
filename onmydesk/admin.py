@@ -53,6 +53,21 @@ params.allow_tags = True
 params.short_description = 'Parameters'
 
 
+def status(obj):
+    status_classes = {
+        models.Report.STATUS_PENDING: '',
+        models.Report.STATUS_PROCESSING: 'onm-label-warning',
+        models.Report.STATUS_PROCESSED: 'onm-label-success',
+        models.Report.STATUS_ERROR: 'onm-label-error',
+    }
+
+    status_list = dict(models.Report.STATUS_CHOICES)
+    return '<span class="label {}">{}</span>'.format(
+        status_classes.get(obj.status, ''),
+        status_list.get(obj.status, ''))
+status.allow_tags = True
+
+
 def reports_available():
     report_class_list = getattr(settings, 'ONMYDESK_REPORT_LIST', [])
 
@@ -110,17 +125,20 @@ def _get_report_class_name(request, default=None):
 class ReportAdmin(admin.ModelAdmin):
     class Media:
         js = ('onmydesk/js/common.js',)
+        css = {
+            'all': ('onmydesk/css/common.css',)
+        }
 
     form = BaseReportAdminForm
 
     model = models.Report
     ordering = ('-insert_date',)
-    list_display = ('id', 'report_name', 'insert_date', 'update_date', 'status')
+    list_display = ('id', 'report_name', 'insert_date', 'update_date', status)
     list_display_links = ('id', 'report_name',)
     list_filter = ('report', 'status')
     search_fields = ('report', 'status')
 
-    readonly_fields = ['results', 'status', 'insert_date', 'update_date', 'created_by',
+    readonly_fields = ['results', status, 'insert_date', 'update_date', 'created_by',
                        'process_time', results, params]
 
     def save_model(self, request, obj, form, change):
@@ -162,7 +180,7 @@ class ReportAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldset = [
             ('Identification', {
-                'fields': ('report', 'status')
+                'fields': ('report', status)
             }),
             ('Results', {
                 'fields': (results,)
