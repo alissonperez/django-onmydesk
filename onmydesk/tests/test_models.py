@@ -5,7 +5,7 @@ from decimal import Decimal, getcontext
 from django.test import TestCase
 from unittest import mock
 
-from onmydesk.models import (Report, ReportNotSavedException,
+from onmydesk.models import (Report, Scheduler, ReportNotSavedException,
                              output_file_handler)
 
 
@@ -183,3 +183,24 @@ class ReportTestCase(TestCase):
         thing = patcher.start()
         self.addCleanup(patcher.stop)
         return thing
+
+
+class SchedulerTestCase(TestCase):
+
+    def test_set_params_must_serializer_info_and_store_on_params_attr(self):
+        scheduler = Scheduler()
+
+        params = {'teste': 'Alisson'}
+
+        scheduler.set_params(params)
+
+        expected_result = base64.b64encode(pickle.dumps(params))
+        self.assertEqual(scheduler.params, expected_result)
+
+    def test_get_params_must_return_unserialized_info(self):
+        params = {'param1': 1}
+
+        report = Scheduler()
+        report.params = base64.b64encode(pickle.dumps(params))
+
+        self.assertEqual(report.get_params(), params)

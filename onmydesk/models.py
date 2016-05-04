@@ -174,3 +174,21 @@ class Scheduler(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+
+    def set_params(self, params):
+        """Set params to be used when report is processed
+
+        :param dict params: Dictionary with params to be used to process report.
+        """
+
+        self.params = base64.b64encode(pickle.dumps(params))
+
+    def get_params(self):
+        """Params to be used to process report.
+
+        :return: Report params"""
+
+        if self.params:
+            return pickle.loads(base64.b64decode(self.params))
+
+        return None
