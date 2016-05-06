@@ -187,6 +187,23 @@ class ReportTestCase(TestCase):
 
 class SchedulerTestCase(TestCase):
 
+    def test_to_string(self):
+        self.report_class = mock.MagicMock()
+        self.report_class.name = 'My Report'
+
+        scheduler = Scheduler(report='my_report_class')
+
+        with mock.patch('onmydesk.models.my_import', return_value=self.report_class):
+            self.assertEqual(str(scheduler), 'My Report')
+
+            scheduler.save()
+            self.assertEqual(str(scheduler), 'My Report #{}'.format(scheduler.id))
+
+    def test_to_string_with_empty_report_returns_generic_name(self):
+        scheduler = Scheduler()
+
+        self.assertEqual(str(scheduler), 'Scheduler object')
+
     def test_set_params_must_serializer_info_and_store_on_params_attr(self):
         scheduler = Scheduler()
 
