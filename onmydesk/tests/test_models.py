@@ -37,9 +37,21 @@ class ReportTestCase(TestCase):
         self.patch('onmydesk.models.output_file_handler', my_output_file_handler)
 
         self.report_instance = mock.MagicMock()
+        self.report_instance.name = 'My Report'
         self.report_instance.output_filepaths = ['/tmp/flunfa.tsv']
+
         self.report_class = mock.MagicMock(return_value=self.report_instance)
+        self.report_class.name = 'My Report'
+
         self.my_import_mocked = self.patch('onmydesk.models.my_import', return_value=self.report_class)
+
+    def test_to_string(self):
+        report = Report(report='my_report_class')
+        self.assertEqual(str(report), self.report_instance.name)
+
+        report.save()
+
+        self.assertEqual(str(report), '{} #{}'.format(self.report_instance.name, report.id))
 
     def test_process_must_call_process_from_report_class(self):
         report = Report(report='my_report_class')

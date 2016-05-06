@@ -76,8 +76,7 @@ def reports_available():
     for class_path in report_class_list:
         klass = utils.my_import(class_path)
         report_list.append(
-            (class_path, klass.name)
-        )
+            (class_path, klass.name))
 
     return report_list
 

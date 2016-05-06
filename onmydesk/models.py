@@ -69,6 +69,12 @@ class Report(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
+    def __str__(self):
+        report_class = my_import(self.report)
+        return '{}{}'.format(
+            report_class.name,
+            ' #{}'.format(self.id) if self.id else '')
+
     def set_params(self, params):
         """Set params to be used when report is processed
 
