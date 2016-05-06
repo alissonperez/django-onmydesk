@@ -77,6 +77,9 @@ class Report(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
+        if not self.report:
+            return 'Report object'
+
         report_class = my_import(self.report)
         return '{}{}'.format(
             report_class.name,

@@ -55,6 +55,10 @@ class ReportTestCase(TestCase):
 
         self.assertEqual(str(report), '{} #{}'.format(self.report_instance.name, report.id))
 
+    def test_to_string_with_empty_report_must_return_generic_name(self):
+        report = Report()
+        self.assertEqual(str(report), 'Report object')
+
     def test_process_must_call_process_from_report_class(self):
         report = Report(report='my_report_class')
         report.save()
