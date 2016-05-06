@@ -1,10 +1,11 @@
 import copy
+from collections import OrderedDict
 
-from django.contrib import admin
 from django import forms
 from django.conf import settings
+from django.contrib import admin
 
-from onmydesk import models, utils
+from . import forms as local_forms, models, utils
 
 
 def get_result_link(result):
@@ -217,4 +218,117 @@ class ReportAdmin(admin.ModelAdmin):
         return readonly_fields
 
 
+def _get_scheduler_report_form(class_name):
+    '''Returns report form to be used by scheduler'''
+
+    form = _get_report_form(class_name)
+
+    if not form:
+        return None
+
+    # Handle form fields
+    override_fields = OrderedDict()
+    for name, value in form.base_fields.items():
+        if isinstance(value, forms.fields.DateField):
+            override_fields[name] = local_forms.fields.SchedulerDateField(
+                required=value.required)
+
+    form = type('NewReportForm', (form,), override_fields)
+
+    return form
+
+
+def _get_scheduler_report_admin_form(class_name, obj):
+    '''Returns form used by admin screen'''
+
+    form = _get_scheduler_report_form(class_name)
+
+    # Fill initial field of form params with what is in object to
+    # Enable it's edition.
+    if obj:
+        params = obj.get_params()
+        for name, field in form.base_fields.items():
+            if name in params and name in params:
+                field.initial = params[name]
+
+    if form and not issubclass(form, BaseReportAdminForm):
+        form = type('ParamsSchedulerAdminForm', (form, SchedulerAdminForm), dict())
+
+    return form
+
+
+class SchedulerAdminForm(forms.ModelForm):
+    report = forms.fields.ChoiceField(choices=[('', '')] + reports_available(), initial='')
+
+    class Meta:
+        model = models.Scheduler
+        exclude = []
+
+
+class SchedulerAdmin(admin.ModelAdmin):
+    class Media:
+        js = ('onmydesk/js/common.js',)
+
+    form = SchedulerAdminForm
+    model = models.Scheduler
+    ordering = ('-insert_date',)
+    list_display = ('id', 'report_name', 'periodicity', 'insert_date', 'update_date', 'created_by')
+    list_display_links = ('id', 'report_name',)
+    list_filter = ('report',)
+    search_fields = ('report',)
+
+    readonly_fields = ['insert_date', 'update_date', 'created_by']
+
+    def report_name(self, obj):
+        if not getattr(self, '_reports_available_cache', None):
+            self._reports_available_cache = dict(reports_available())
+
+        return self._reports_available_cache.get(obj.report, obj.report)
+    report_name.short_description = 'Name'
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        if request.user:
+            obj.created_by = request.user
+
+        data = copy.deepcopy(form.cleaned_data)
+
+        # Filtering fields by report form fields
+        report_form_fields = _get_report_form(obj.report).base_fields.keys()
+        data = {k: v for k, v in data.items() if k in report_form_fields}
+
+        obj.set_params(data)
+        obj.save()
+
+        return obj
+
+    def get_form(self, request, obj=None, **kwargs):
+        report_class_name = _get_report_class_name(request, obj.report if obj else None)
+        form = _get_scheduler_report_admin_form(report_class_name, obj)
+        self.form = form or self.form
+        return super().get_form(request, obj, **kwargs)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = [
+            ('Identification', {
+                'fields': ('report', 'periodicity')
+            }),
+            ('Lifecycle', {
+                'fields': ('insert_date', 'update_date', 'created_by')
+            }),
+        ]
+
+        report_class_name = _get_report_class_name(request, obj.report if obj else None)
+        form = _get_scheduler_report_form(report_class_name)
+
+        if form:
+            fieldsets.insert(1, ('Filters', {
+                'fields': form.base_fields.keys()
+            }))
+
+        return fieldsets
+
+
+admin.site.register(models.Scheduler, SchedulerAdmin)
 admin.site.register(models.Report, ReportAdmin)
