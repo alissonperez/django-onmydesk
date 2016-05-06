@@ -259,6 +259,10 @@ def _get_scheduler_report_admin_form(class_name, obj):
 
 class SchedulerAdminForm(forms.ModelForm):
     report = forms.fields.ChoiceField(choices=[('', '')] + reports_available(), initial='')
+    notify_emails = forms.fields.CharField(help_text='Separate e-mails by ","',
+                                           max_length=1000,
+                                           required=False,
+                                           widget=forms.Textarea)
 
     class Meta:
         model = models.Scheduler
@@ -313,6 +317,9 @@ class SchedulerAdmin(admin.ModelAdmin):
         fieldsets = [
             ('Identification', {
                 'fields': ('report', 'periodicity')
+            }),
+            ('Notification', {
+                'fields': ('notify_emails',)
             }),
             ('Lifecycle', {
                 'fields': ('insert_date', 'update_date', 'created_by')

@@ -169,6 +169,9 @@ class Scheduler(models.Model):
 
     params = models.BinaryField(verbose_name='Parameters', null=True, blank=True)
 
+    notify_emails = models.CharField('E-mail\'s to notify after process (separated by ",")',
+                                     max_length=1000, null=True, blank=True)
+
     insert_date = models.DateTimeField('Creation Date', auto_now_add=True)
     update_date = models.DateTimeField('Update Date', auto_now=True)
 
