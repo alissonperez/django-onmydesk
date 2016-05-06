@@ -144,7 +144,7 @@ class ReportAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
-        if request.user:
+        if request.user and not obj.created_by:
             obj.created_by = request.user
 
         if not obj.results:
@@ -289,7 +289,7 @@ class SchedulerAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
-        if request.user:
+        if request.user and not obj.created_by:
             obj.created_by = request.user
 
         data = copy.deepcopy(form.cleaned_data)
