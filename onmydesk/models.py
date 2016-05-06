@@ -1,16 +1,18 @@
 """
 Required models to handle and store generated reports.
 """
-import pickle
 import base64
-
-from django.db import models
-from django.conf import settings
-
-from timeit import default_timer as timer
+import pickle
+from datetime import date
 from decimal import Decimal, getcontext
+from timeit import default_timer as timer
 
-from onmydesk.utils import my_import
+from django import forms
+from django.conf import settings
+from django.db import models
+
+from onmydesk.utils import my_import, str_to_date
+
 
 ONMYDESK_FILE_HANDLER = getattr(settings, 'ONMYDESK_FILE_HANDLER', None)
 
@@ -205,3 +207,28 @@ class Scheduler(models.Model):
             return pickle.loads(base64.b64decode(self.params))
 
         return None
+
+    def get_processed_params(self, reference_date=None):
+        """Params to be used to process report
+
+        :param date reference_date: Date to use as reference
+        :return dict: Dict with params
+        """
+
+        reference_date = reference_date or date.today()
+        report_class = my_import(self.report)
+
+        params = self.get_params()
+
+        if not params:
+            return None
+
+        form = report_class.get_form()
+        if not form:
+            return params
+
+        for name, field in form.base_fields.items():
+            if name in params and isinstance(field, forms.fields.DateField):
+                params[name] = str_to_date(params[name], reference_date)
+
+        return params

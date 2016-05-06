@@ -1,9 +1,10 @@
 import base64
 import pickle
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal, getcontext
 from django.test import TestCase
 from unittest import mock
+from django import forms
 
 from onmydesk.models import (Report, Scheduler, ReportNotSavedException,
                              output_file_handler)
@@ -187,9 +188,27 @@ class ReportTestCase(TestCase):
 
 class SchedulerTestCase(TestCase):
 
-    def test_to_string(self):
+    def setUp(self):
+        class RangeDateForm(forms.Form):
+            my_date = forms.DateField()
+            other_filter = forms.CharField()
+
+        self.report_form = RangeDateForm
+
         self.report_class = mock.MagicMock()
+        self.report_class.form = self.report_form
+        self.report_class.get_form.return_value = self.report_form
         self.report_class.name = 'My Report'
+
+        self._patch('onmydesk.models.my_import', return_value=self.report_class)
+
+    def _patch(self, *args, **kwargs):
+        patcher = mock.patch(*args, **kwargs)
+        thing = patcher.start()
+        self.addCleanup(patcher.stop)
+        return thing
+
+    def test_to_string(self):
 
         scheduler = Scheduler(report='my_report_class')
 
@@ -221,3 +240,26 @@ class SchedulerTestCase(TestCase):
         report.params = base64.b64encode(pickle.dumps(params))
 
         self.assertEqual(report.get_params(), params)
+
+    def test_get_processed_params_must_return_dictionary_with_parameters(self):
+        scheduler = Scheduler()
+
+        params = {'param1': 'First value'}
+
+        scheduler.set_params(params)
+
+        self.assertEqual(scheduler.get_processed_params(), params)
+
+    def test_get_processed_params_must_return_date_fields_processed(self):
+        scheduler = Scheduler(report='my_report_class')
+        scheduler.set_params({'my_date': 'D-2', 'other_filter': 'other_value'})
+
+        reference_date = date(2016, 4, 3)
+        expected_param = {'my_date': date(2016, 4, 1), 'other_filter': 'other_value'}
+        self.assertEqual(scheduler.get_processed_params(reference_date), expected_param)
+
+    def test_get_processed_params_must_return_none_if_params_is_none(self):
+        scheduler = Scheduler(report='my_report_class')
+        scheduler.params = None
+
+        self.assertIsNone(scheduler.get_processed_params())
