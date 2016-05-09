@@ -10,20 +10,29 @@ from onmydesk.models import Report
 class Command(BaseCommand):
     help = 'Process pending reports'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--ids', nargs='+', type=int,
+                            help='Report ids to process')
+
     def handle(self, *args, **options):
         try:
-            self._process_with_lock()
+            self._process_with_lock(options.get('ids'))
         except Exception as e:
             self.stdout.write('Error: {}'.format(str(e)))
 
-    def _process_with_lock(self):
+    def _process_with_lock(self, ids):
         lock = filelock.FileLock(self._get_lock_filepath())
 
         with lock.acquire(timeout=10):
-            self._process_reports()
+            self._process_reports(ids)
 
-    def _process_reports(self):
-        items = Report.objects.filter(status=Report.STATUS_PENDING)[:10]
+    def _process_reports(self, ids):
+        items = Report.objects.filter(status=Report.STATUS_PENDING)
+
+        if ids:
+            items = items.filter(id__in=ids)
+        else:
+            items = items[:10]
 
         count = len(items)
 
