@@ -8,25 +8,13 @@ from django.contrib import admin
 from . import forms as local_forms, models, utils
 
 
-def get_result_link(result):
-    link_handler = getattr(settings, 'ONMYDESK_DOWNLOAD_LINK_HANDLER', None)
-    if not link_handler:
-        return '#'
-
-    handler = utils.my_import(link_handler)
-
-    return handler(result)
-
-
 def results(obj):
     if not obj.results_as_list:
         return ''
 
     links = []
 
-    for filepath in obj.results_as_list:
-        result_link = get_result_link(filepath)
-
+    for result_link, filepath in zip(obj.result_links, obj.results_as_list):
         link = '<li><a href="{url}" target="_blank">{filename}</a></li>'.format(
             url=result_link, filename=filepath)
 

@@ -180,6 +180,26 @@ class ReportTestCase(TestCase):
 
         self.assertIsNone(report.get_params())
 
+    @mock.patch('onmydesk.models.settings.ONMYDESK_DOWNLOAD_LINK_HANDLER', 'whatever')
+    def test_result_links(self):
+        self.report_instance.output_filepaths = [
+            '/tmp/flunfa-2.tsv',
+            '/tmp/flunfa-3.tsv',
+        ]
+
+        report = Report(report='my_report_class')
+
+        report.save()
+        report.process()
+
+        def my_handler(filepath):
+            url_example = 'http://someplace.com/somepath{}'
+            return url_example.format(filepath)
+
+        with mock.patch('onmydesk.models.my_import', return_value=my_handler):
+            links = report.result_links
+            self.assertEqual(links, [my_handler(i) for i in self.report_instance.output_filepaths])
+
     def patch(self, *args, **kwargs):
         patcher = mock.patch(*args, **kwargs)
         thing = patcher.start()

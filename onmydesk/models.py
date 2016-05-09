@@ -130,6 +130,15 @@ class Report(models.Model):
             raise e
 
     @property
+    def result_links(self):
+        link_handler = getattr(settings, 'ONMYDESK_DOWNLOAD_LINK_HANDLER', None)
+        if not link_handler:
+            return '#'
+
+        handler = my_import(link_handler)
+        return [handler(i) for i in self.results_as_list]
+
+    @property
     def results_as_list(self):
         """Returns a list of output results stored in this model
 
