@@ -208,6 +208,20 @@ class Scheduler(models.Model):
 
         return None
 
+    def process(self):
+        report = Report(report=self.report,
+                        # Avoid other routines to get this report to process
+                        status=Report.STATUS_PROCESSING,
+                        created_by=self.created_by)
+
+        report.set_params(self.get_processed_params())
+        report.save()
+
+        report.process()
+        report.save()
+
+        return report
+
     def get_processed_params(self, reference_date=None):
         """Params to be used to process report
 

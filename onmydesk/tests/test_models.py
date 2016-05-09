@@ -5,6 +5,7 @@ from decimal import Decimal, getcontext
 from django.test import TestCase
 from unittest import mock
 from django import forms
+from django.contrib.auth.models import User
 
 from onmydesk.models import (Report, Scheduler, ReportNotSavedException,
                              output_file_handler)
@@ -263,3 +264,30 @@ class SchedulerTestCase(TestCase):
         scheduler.params = None
 
         self.assertIsNone(scheduler.get_processed_params())
+
+    def test_process_must_return_report(self):
+        scheduler = Scheduler(report='my_report_class')
+        result = scheduler.process()
+
+        self.assertIsInstance(result, Report)
+
+    def test_process_must_return_a_saved_report(self):
+        scheduler = Scheduler(report='my_report_class')
+        report = scheduler.process()
+
+        self.assertIsNotNone(report.id)
+
+    def test_process_must_return_a_saved_report_with_created_by_filled(self):
+        user = User.objects.create_user('Joao', 'joao.webmaster@webnastersonline.com.br', '123souwebmaster')
+        scheduler = Scheduler(report='my_report_class', created_by=user)
+
+        report = scheduler.process()
+
+        self.assertEqual(report.created_by, user)
+
+    def test_process_must_call_report_process(self):
+        scheduler = Scheduler(report='my_report_class')
+
+        with mock.patch('onmydesk.models.Report.process') as process_mocked:
+            scheduler.process()
+            self.assertTrue(process_mocked.called)
