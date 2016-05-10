@@ -15,6 +15,7 @@ from django.template import Context
 from django.template.loader import get_template
 
 from . import settings as app_settings
+from .managers import SchedulerManager
 from .utils import my_import, str_to_date
 
 
@@ -157,6 +158,8 @@ class Report(models.Model):
 
 class Scheduler(models.Model):
 
+    objects = SchedulerManager()
+
     PER_MON_FRI = 'mon_fri'
     PER_MON_SUN = 'mon_sun'
     PER_SUN = 'sun'
@@ -178,6 +181,17 @@ class Scheduler(models.Model):
         (PER_FRI, 'Every Friday'),
         (PER_SAT, 'Every Saturday'),
     )
+
+    PERIODICITIES_BY_WEEKDAY = {
+        # Monday is 0 and Sunday is 6
+        0: {PER_MON_SUN, PER_MON_FRI, PER_MON},
+        1: {PER_MON_SUN, PER_MON_FRI, PER_TUE},
+        2: {PER_MON_SUN, PER_MON_FRI, PER_WED},
+        3: {PER_MON_SUN, PER_MON_FRI, PER_THU},
+        4: {PER_MON_SUN, PER_MON_FRI, PER_FRI},
+        5: {PER_MON_SUN, PER_SAT},
+        6: {PER_MON_SUN, PER_SUN},
+    }
 
     report = models.CharField(max_length=255)
     periodicity = models.CharField(max_length=20, choices=PERIODICITIES)
