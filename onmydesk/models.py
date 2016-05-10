@@ -283,7 +283,8 @@ class Scheduler(models.Model):
         content = template.render(Context(context))
 
         send_mail(
-            'OnMyDesk - Report - {}'.format(str(report)),
+            app_settings.ONMYDESK_SCHEDULER_NOTIFY_SUBJECT.format(
+                report_name=str(report)),
             content,
-            'from@example.com',
+            app_settings.ONMYDESK_NOTIFY_FROM,
             self.notify_emails.split(','))
