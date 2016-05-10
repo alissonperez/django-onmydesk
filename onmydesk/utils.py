@@ -1,6 +1,7 @@
 """Module with common utilities to this package"""
 import re
 from datetime import timedelta
+import importlib
 
 
 def my_import(class_name):
@@ -18,9 +19,15 @@ def my_import(class_name):
     """
 
     *packs, class_name = class_name.split('.')
-    mod = __import__('.'.join(packs), fromlist=[class_name])
-    klass = getattr(mod, class_name)
-    return klass
+
+    try:
+        module = importlib.import_module('.'.join(packs))
+        klass = getattr(module, class_name)
+        return klass
+    except (ImportError, AttributeError) as e:
+        msg = 'Could not import "{}" from {}: {}.'.format(
+            class_name, e.__class__.__name__, e)
+        raise ImportError(msg)
 
 
 def str_to_date(value, reference_date):

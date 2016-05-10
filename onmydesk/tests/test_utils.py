@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from django.test import TestCase
 
-from onmydesk.utils import str_to_date
+from onmydesk.utils import str_to_date, my_import
 
 
 class StrToDateTestCase(TestCase):
@@ -45,3 +45,16 @@ class StrToDateTestCase(TestCase):
         self.assertRaises(ValueError, str_to_date, 'A', date.today())
         self.assertRaises(ValueError, str_to_date, 'D++1', date.today())
         self.assertRaises(ValueError, str_to_date, '1-D', date.today())
+
+
+class MyImportTestCase(TestCase):
+
+    def test_call_must_return_class(self):
+        report_class = my_import('onmydesk.core.reports.BaseReport')
+
+        from onmydesk.core.reports import BaseReport
+
+        self.assertEqual(report_class, BaseReport)
+
+    def test_call_must_raises_exception_if_class_not_found(self):
+        self.assertRaises(ImportError, my_import, 'onmydesk.core.reports.Flunfa')
