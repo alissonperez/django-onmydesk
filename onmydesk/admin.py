@@ -2,10 +2,9 @@ import copy
 from collections import OrderedDict
 
 from django import forms
-from django.conf import settings
 from django.contrib import admin
 
-from . import forms as local_forms, models, utils
+from . import forms as local_forms, models, settings as app_settings, utils
 
 
 def results(obj):
@@ -58,7 +57,7 @@ status.allow_tags = True
 
 
 def reports_available():
-    report_class_list = getattr(settings, 'ONMYDESK_REPORT_LIST', [])
+    report_class_list = app_settings.ONMYDESK_REPORT_LIST
 
     report_list = []
 

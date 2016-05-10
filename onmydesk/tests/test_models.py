@@ -15,7 +15,7 @@ class OutputFileHandlerTestCase(TestCase):
 
     def test_call_must_return_filepath_changed(self):
         my_handler = 'path.to.my.handler'
-        with mock.patch('onmydesk.models.ONMYDESK_FILE_HANDLER', my_handler):
+        with mock.patch('onmydesk.models.app_settings.ONMYDESK_FILE_HANDLER', my_handler):
             my_handler_mocked = mock.MagicMock(return_value='/tmp/filepath-changed.tsv')
             with mock.patch('onmydesk.models.my_import', return_value=my_handler_mocked) as my_import_mocked:
                 self.assertEqual(
@@ -180,7 +180,7 @@ class ReportTestCase(TestCase):
 
         self.assertIsNone(report.get_params())
 
-    @mock.patch('onmydesk.models.settings.ONMYDESK_DOWNLOAD_LINK_HANDLER', 'whatever')
+    @mock.patch('onmydesk.models.app_settings.ONMYDESK_DOWNLOAD_LINK_HANDLER', 'whatever')
     def test_result_links(self):
         self.report_instance.output_filepaths = [
             '/tmp/flunfa-2.tsv',

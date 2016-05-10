@@ -14,7 +14,8 @@ from django.db import models
 from django.template import Context
 from django.template.loader import get_template
 
-from onmydesk.utils import my_import, str_to_date
+from . import settings as app_settings
+from .utils import my_import, str_to_date
 
 
 ONMYDESK_FILE_HANDLER = getattr(settings, 'ONMYDESK_FILE_HANDLER', None)
@@ -36,7 +37,7 @@ def output_file_handler(filepath):
     :rtype: str
     """
 
-    function_handler = ONMYDESK_FILE_HANDLER
+    function_handler = app_settings.ONMYDESK_FILE_HANDLER
 
     if not function_handler:
         return filepath
@@ -134,7 +135,7 @@ class Report(models.Model):
 
     @property
     def result_links(self):
-        link_handler = getattr(settings, 'ONMYDESK_DOWNLOAD_LINK_HANDLER', None)
+        link_handler = app_settings.ONMYDESK_DOWNLOAD_LINK_HANDLER
         if not link_handler:
             return '#'
 
