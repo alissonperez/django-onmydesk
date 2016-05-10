@@ -9,7 +9,10 @@ from timeit import default_timer as timer
 
 from django import forms
 from django.conf import settings
+from django.core.mail import send_mail
 from django.db import models
+from django.template import Context
+from django.template.loader import get_template
 
 from onmydesk.utils import my_import, str_to_date
 
@@ -229,6 +232,8 @@ class Scheduler(models.Model):
         report.process()
         report.save()
 
+        self._notify(report)
+
         return report
 
     def get_processed_params(self, reference_date=None):
@@ -255,3 +260,29 @@ class Scheduler(models.Model):
                 params[name] = str_to_date(params[name], reference_date)
 
         return params
+
+    def _notify(self, report):
+        template = get_template('onmydesk/scheduler-notify.txt')
+
+        destinations = self.notify_emails.split(',') if self.notify_emails else []
+
+        if not destinations:
+            return
+
+        context = dict(
+            report_name=report,
+            periodicity=dict(self.PERIODICITIES).get(self.periodicity, self.periodicity),
+            insert_date=self.insert_date,
+            created_by=self.created_by,
+            params=report.get_params(),
+            results=report.result_links,
+            process_time=report.process_time
+        )
+
+        content = template.render(Context(context))
+
+        send_mail(
+            'OnMyDesk - Report - {}'.format(str(report)),
+            content,
+            'from@example.com',
+            self.notify_emails.split(','))

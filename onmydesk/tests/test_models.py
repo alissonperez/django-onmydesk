@@ -311,3 +311,17 @@ class SchedulerTestCase(TestCase):
         with mock.patch('onmydesk.models.Report.process') as process_mocked:
             scheduler.process()
             self.assertTrue(process_mocked.called)
+
+    def test_process_must_notify_users(self):
+        scheduler = Scheduler(report='my_report_class', notify_emails='test@test.com,other@test.com')
+
+        with mock.patch('onmydesk.models.send_mail') as send_mail_mocked:
+            scheduler.process()
+            self.assertTrue(send_mail_mocked.called)
+
+    def test_process_must_not_notify_if_scheduler_has_no_emails(self):
+        scheduler = Scheduler(report='my_report_class')
+
+        with mock.patch('onmydesk.models.send_mail') as send_mail_mocked:
+            scheduler.process()
+            self.assertFalse(send_mail_mocked.called)

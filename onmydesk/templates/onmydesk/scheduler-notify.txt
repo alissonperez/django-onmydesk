@@ -1,0 +1,17 @@
+Report: {{ report_name }}
+
+Periodicity: {{ periodicity }}
+
+Created at: {{ insert_date }}
+
+Created by: {{ created_by }}
+
+Process time (secs): {{ process_time }}
+
+Parameters:
+{% for name, value in params.items %}
+- {{ name }}: {{ value }}{% endfor %}
+
+Results:
+{% for url in results %}
+- {{ url|safe }}{% endfor %}
