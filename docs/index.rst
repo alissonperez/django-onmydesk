@@ -12,6 +12,9 @@ Contents:
    :maxdepth: 3
 
    userguide
+   schedulers
+   commands
+   settings
    reference
 
 Indices and tables

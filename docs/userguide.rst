@@ -47,12 +47,23 @@ On your project settings, add the following config::
 	'myapp.reports.UsersReport',
     ]
 
-**PS.: Each new report must be added to this list. Otherwise, it won't be shown on admin screen.**
+.. note::
+   Each new report must be added to this list. Otherwise, it won't be shown on admin screen.
 
 Now, access your **OnMyDesk** admin screen and you'll see your **Users report** available on report creation screen.
 
+After you create a report, it'll be status settled up as 'Pending', to process it you must run :ref:`command_process` command. E.g::
+
+  $ ./manage.py process
+  Found 1 reports to process
+  Processing report #29 - 1 of 1
+  Report #29 processed
+  $
+
 A little bit more
 ------------------
+
+.. _params_from_user:
 
 Parameters from user
 ^^^^^^^^^^^^^^^^^^^^^
@@ -143,77 +154,3 @@ Example::
 	outputs = (outputs.TSVOutput(), outputs.XLSXOutput())
 
 We have some output options by default. See more about on :py:mod:`onmydesk.core.outputs`.
-
-
-Settings
----------
-
-ONMYDESK_REPORT_LIST
-^^^^^^^^^^^^^^^^^^^^^^
-
-It must contains a list of reports to be available at admin screen.
-
-Example::
-
-    ONMYDESK_REPORT_LIST = [
-	# ...
-        'myapp.reports.MyReport',
-    ]
-
-.. _onmydesk_file_handler:
-
-ONMYDESK_FILE_HANDLER
-^^^^^^^^^^^^^^^^^^^^^
-
-It's an optional setting. It must be used to indicate a function to be called to handle a file after its generation. This function will receive the report filepath and must return a filepath, a url or something like this. It's useful to move reports to another directory or to a cloud storage.
-
-Example:
-
-We create a function at any place to upload our report to an Amazon S3 bucket::
-
-    # myapp/utils.py
-
-    def report_s3_upload(filepath):
-	bucket = get_bucket(settings.BUCKETS['reports'])
-
-	now = timezone.now()
-
-	key_name = '{}/{}/{}'.format(
-	    now.strftime('%Y'),
-	    now.strftime('%m-%d'),
-	    path.basename(filepath))
-
-	key = bucket.new_key(key_name)
-	key.set_contents_from_filename(filepath)
-
-	return key.name
-
-On our settings, we setup with::
-
-  ONMYDESK_FILE_HANDLER = 'myapp.utils.report_s3_upload'
-
-Now, our reports will be uploaded to our bucket at Amazon S3 after its processing.
-
-.. _onmydesk_download_link_handler:
-
-ONMYDESK_DOWNLOAD_LINK_HANDLER
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It's an optional setting. It must be used to indicate a function to generate a link to download our report file. This function will receive the report filepath or what was returned by :ref:`onmydesk_file_handler` and must return a url to download the report file.
-
-Example:
-
-In the same way showed by :ref:`onmydesk_file_handler`, now our function will return a url to download our report from Amazon S3 bucket::
-
-  # myapp/utils.py
-
-  def get_report_s3_link(filepath):
-    bucket = get_bucket(settings.BUCKETS['reports'])
-
-    key = bucket.get_key(filepath)
-
-    return key.generate_url(settings.REPORT_S3_LINK_LIFETIME)
-
-On our settings, we setup with::
-
-  ONMYDESK_DOWNLOAD_LINK_HANDLER = 'myapp.utils.get_report_s3_link'
