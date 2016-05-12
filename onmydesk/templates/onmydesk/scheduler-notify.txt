@@ -1,8 +1,8 @@
-------------------------------------------------------------
-Report
-
 Report: {{ report }}
+Periodicity: {{ scheduler.get_periodicity_display }}
 Process time (secs): {{ report.process_time }}
+Scheduler created by: {{ scheduler.created_by }}
+Scheduler created at: {{ scheduler.insert_date }}
 
 Parameters used:
 {% for name, value in report.get_params.items %}
@@ -11,12 +11,3 @@ Parameters used:
 Download:
 {% for url in report.result_links %}
 - {{ url|safe }}{% endfor %}
-
-------------------------------------------------------------
-Scheduler {{ scheduler }}
-
-Periodicity: {{ scheduler.get_periodicity_display }}
-Created at: {{ scheduler.insert_date }}
-Created by: {{ scheduler.created_by }}
-
-------------------------------------------------------------
