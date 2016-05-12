@@ -293,8 +293,6 @@ class Scheduler(models.Model):
             report=report,
         )
 
-        import pudb; pudb.set_trace()
-
         content = template.render(Context(context))
 
         send_mail(
