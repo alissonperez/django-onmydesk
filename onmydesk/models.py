@@ -279,6 +279,7 @@ class Scheduler(models.Model):
 
         return params
 
+    # TODO: Move this to a signal handler ('scheduler processed' or something like that).
     def _notify(self, report):
         template = get_template('onmydesk/scheduler-notify.txt')
 
@@ -288,14 +289,11 @@ class Scheduler(models.Model):
             return
 
         context = dict(
-            report_name=report,
-            periodicity=dict(self.PERIODICITIES).get(self.periodicity, self.periodicity),
-            insert_date=self.insert_date,
-            created_by=self.created_by,
-            params=report.get_params(),
-            results=report.result_links,
-            process_time=report.process_time
+            scheduler=self,
+            report=report,
         )
+
+        import pudb; pudb.set_trace()
 
         content = template.render(Context(context))
 

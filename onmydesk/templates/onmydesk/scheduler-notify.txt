@@ -1,17 +1,22 @@
-Report: {{ report_name }}
+------------------------------------------------------------
+Report
 
-Periodicity: {{ periodicity }}
+Report: {{ report }}
+Process time (secs): {{ report.process_time }}
 
-Created at: {{ insert_date }}
-
-Created by: {{ created_by }}
-
-Process time (secs): {{ process_time }}
-
-Parameters:
-{% for name, value in params.items %}
+Parameters used:
+{% for name, value in report.get_params.items %}
 - {{ name }}: {{ value }}{% endfor %}
 
-Results:
-{% for url in results %}
+Download:
+{% for url in report.result_links %}
 - {{ url|safe }}{% endfor %}
+
+------------------------------------------------------------
+Scheduler {{ scheduler }}
+
+Periodicity: {{ scheduler.get_periodicity_display }}
+Created at: {{ scheduler.insert_date }}
+Created by: {{ scheduler.created_by }}
+
+------------------------------------------------------------
