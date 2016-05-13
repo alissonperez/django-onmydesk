@@ -50,6 +50,8 @@ class SQLDataset(BaseDataset):
             for row in mydataset.iterate():
                 print(row)   # --> A OrderedDict with cols and values.
 
+    .. note:: It's recomended to use instances of this class using `with` statement.
+
     **BE CAREFUL**
 
     Always use `query_params` from :func:`__init__` to put dinamic values into the query. E.g.::
@@ -72,6 +74,7 @@ class SQLDataset(BaseDataset):
         self.query = query
         self.query_params = query_params
         self.db_alias = db_alias
+        self.cursor = None
 
     def iterate(self, params=None):
         """
@@ -79,6 +82,11 @@ class SQLDataset(BaseDataset):
         :returns: Rows from query result.
         :rtype: Iterator with OrderedDict items.
         """
+
+        # Used if we are not using context manager
+        has_cursor = bool(self.cursor)
+        if not has_cursor:
+            self._init_cursor()
 
         self.cursor.execute(self.query, self.query_params)
         cols = tuple(c[0] for c in self.cursor.description)
@@ -89,16 +97,24 @@ class SQLDataset(BaseDataset):
             yield row
             one = self.cursor.fetchone()
 
+        if not has_cursor:
+            self._close_cursor()
+
     def __enter__(self):
         """*Enter* from context manager to open a cursor with database"""
-
-        if self.db_alias:
-            self.cursor = connections[self.db_alias].cursor()
-        else:
-            self.cursor = connection.cursor()
-
+        self._init_cursor()
         return self
 
     def __exit__(self, type, value, traceback):
         """*Exit* from context manager to close cursor with database"""
+        self._close_cursor()
+
+    def _close_cursor(self):
         self.cursor.close()
+        self.cursor = None
+
+    def _init_cursor(self):
+        if self.db_alias:
+            self.cursor = connections[self.db_alias].cursor()
+        else:
+            self.cursor = connection.cursor()

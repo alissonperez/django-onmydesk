@@ -26,6 +26,22 @@ class SQLDatasetTestCase(TestCase):
 
         self.assertEqual(results, expected_result)
 
+    def test_iterate_with_no_context_manager_must_return_result(self):
+        mocked_cursor = self._create_mocked_cursor()
+
+        with mock.patch('onmydesk.core.datasets.connection.cursor', return_value=mocked_cursor):
+            dataset = datasets.SQLDataset('SELECT * FROM flunfa')
+            results = []
+            for item in dataset.iterate():
+                results.append(item)
+
+        expected_result = [
+            OrderedDict([('name', 'Alisson'), ('age', 25)]),
+            OrderedDict([('name', 'Joao'), ('age', 12)]),
+        ]
+
+        self.assertEqual(results, expected_result)
+
     def test_iterate_must_call_execute_with_query_params(self):
         mocked_cursor = self._create_mocked_cursor()
 
