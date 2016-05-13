@@ -1,0 +1,14 @@
+<b>Report</b>: {{ report }}<br>
+<b>Periodicity</b>: {{ scheduler.get_periodicity_display }}<br>
+<b>Process time (secs)</b>: {{ report.process_time }}<br>
+<b>Scheduler created by</b>: {{ scheduler.created_by }}<br>
+<b>Parameters used</b>:
+<ul>
+{% for name, value in report.get_params.items %}
+<li><b>{{ name }}</b>: {{ value }}</li>{% endfor %}
+</ul>
+<b>Download</b>:
+<ul>
+{% for url in report.result_links %}
+<li><a href="{{ url|safe }}">{{ url|safe }}</a></li>{% endfor %}
+</ul>

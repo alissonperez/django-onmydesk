@@ -281,7 +281,8 @@ class Scheduler(models.Model):
 
     # TODO: Move this to a signal handler ('scheduler processed' or something like that).
     def _notify(self, report):
-        template = get_template('onmydesk/scheduler-notify.txt')
+        text_template = get_template('onmydesk/scheduler-notify.txt')
+        html_template = get_template('onmydesk/scheduler-notify.html')
 
         destinations = self.notify_emails.split(',') if self.notify_emails else []
 
@@ -293,11 +294,13 @@ class Scheduler(models.Model):
             report=report,
         )
 
-        content = template.render(Context(context))
+        text_content = text_template.render(Context(context))
+        html_content = html_template.render(Context(context))
 
         send_mail(
             app_settings.ONMYDESK_SCHEDULER_NOTIFY_SUBJECT.format(
                 report_name=str(report)),
-            content,
+            text_content,
             app_settings.ONMYDESK_NOTIFY_FROM,
-            self.notify_emails.split(','))
+            self.notify_emails.split(','),
+            html_message=html_content)
