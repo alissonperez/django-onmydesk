@@ -139,6 +139,11 @@ class Report(models.Model):
 
     @property
     def result_links(self):
+        """Returns a list with links to access report results.
+
+        :returns: List of links to access results
+        :rtype: list"""
+
         link_handler = app_settings.ONMYDESK_DOWNLOAD_LINK_HANDLER
         if not link_handler:
             return '#'
@@ -160,6 +165,8 @@ class Report(models.Model):
 
 
 class Scheduler(models.Model):
+    """Model used to schedule reports to be generated with some
+    periodicity (every monday, from monday to friday, etc.)"""
 
     objects = SchedulerManager()
 
@@ -239,6 +246,12 @@ class Scheduler(models.Model):
         return None
 
     def process(self):
+        """Process scheduler creating and returing a report.
+        After processing, this method tries to notify e-mails filled in notify_emails field.
+
+        :returns: Report result
+        :rtype: Report"""
+
         report = Report(report=self.report,
                         # Avoid other routines to get this report to process
                         status=Report.STATUS_PROCESSING,
@@ -258,7 +271,8 @@ class Scheduler(models.Model):
         """Params to be used to process report
 
         :param date reference_date: Date to use as reference
-        :return dict: Dict with params
+        :returns: Dict with params
+        :rtype: dict
         """
 
         reference_date = reference_date or date.today()

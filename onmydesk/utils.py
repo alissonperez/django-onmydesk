@@ -36,7 +36,8 @@ def str_to_date(value, reference_date):
 
     :param str value: String like 'D-1', 'D+1', 'D'...
     :param date reference_date: Date to be used as 'D'
-    :return: Result date
+    :returns: Result date
+    :rtype: date
     '''
 
     n_value = value.strip(' ').replace(' ', '').upper()
