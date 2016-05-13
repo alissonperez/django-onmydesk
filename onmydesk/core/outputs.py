@@ -18,12 +18,13 @@ class BaseOutput(metaclass=ABCMeta):
 
     @abstractmethod
     def process(self, iterator, header=None, footer=None):
-        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
-        :param iterator iterator: A iterable object.
+        :param iterator iterator: An iterable object.
         :param header: Output header.
         :param footer: Output footer.
         """
+
         raise NotImplemented()
 
     def gen_tmpfilename(self):
@@ -40,9 +41,9 @@ class SVOutput(BaseOutput, metaclass=ABCMeta):
     delimiter = None
 
     def process(self, iterator, header=None, footer=None):
-        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
-        :param Dataset dataset: A dataset to be used by output.
+        :param iterator iterator: An iterable object.
         :param header: Output header.
         :param footer: Output footer.
         """
@@ -106,9 +107,9 @@ class XLSXOutput(BaseOutput):
     """Min width used to set column widths"""
 
     def process(self, iterator, header=None, footer=None):
-        """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
+        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
-        :param Dataset dataset: A dataset to be used by output.
+        :param iterator iterator: An iterable object.
         :param header: Output header.
         :param footer: Output footer.
         """
