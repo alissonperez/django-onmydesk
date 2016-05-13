@@ -102,6 +102,9 @@ class TSVOutput(SVOutput):
 class XLSXOutput(BaseOutput):
     """Output to generate XLSX files."""
 
+    min_width = 8.43
+    """Min width used to set column widths"""
+
     def process(self, iterator, header=None, footer=None):
         """Process the output given a `dataset`, `header` and `footer`. The result are stored in :attr:`filepath`.
 
@@ -117,8 +120,11 @@ class XLSXOutput(BaseOutput):
         header_format = workbook.add_format({'bold': True, 'bg_color': '#C9C9C9'})
         footer_format = workbook.add_format({'bold': True, 'bg_color': '#DDDDDD'})
 
+        line_widths = {}
+
         current_row = 0
         if header:
+            line_widths = self._compute_line_widths(header, line_widths)
             worksheet.write_row(current_row, 0, [str(i) for i in header], header_format)
             current_row += 1
 
@@ -133,16 +139,28 @@ class XLSXOutput(BaseOutput):
 
             worksheet.write_row(row_num, 0, values)
 
+            line_widths = self._compute_line_widths(values, line_widths)
             current_row = row_num
 
         if footer:
             current_row += 1
+            line_widths = self._compute_line_widths(footer, line_widths)
             worksheet.write_row(current_row, 0, [str(i) for i in footer], footer_format)
 
         # Freeze first row
         worksheet.freeze_panes(1, 0)
 
+        for i, v in line_widths.items():
+            worksheet.set_column(i, i, v)
+
         workbook.close()
+
+    def _compute_line_widths(self, line, actual_line_widths):
+        for i, v in enumerate(line):
+            actual_line_widths[i] = max(len(str(v)),
+                                        actual_line_widths.get(i, self.min_width))
+
+        return actual_line_widths
 
     def gen_tmpfilename(self):
         """It generates and returns a XLSX temporary file.

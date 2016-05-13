@@ -319,6 +319,40 @@ class XLSXOutputTestCase(TestCase):
         footer_line = 1 + 2
         self.assertEqual(last_call, mock.call(footer_line, 0, ['Total', '51'], footer_format))
 
+    def test_call_must_set_column_width_with_correct_chars_number(self):
+        rows = [
+            ('Joao', 'Testing large line', 'Small line'),
+            ('Alisson dos Reis Perez', 'Test', 'Width of the column must be max chars number'),
+        ]
+
+        outputs.XLSXOutput().process(rows, header=['Name', 'Other', 'Other2'])
+
+        columns_width = {
+            0: len(rows[1][0]),
+            1: len(rows[0][1]),
+            2: len(rows[1][2]),
+        }
+
+        calls = [mock.call(i, i, v) for i, v in columns_width.items()]
+
+        self.worksheet_mocked.set_column.assert_has_calls(calls)
+
+    def test_call_process_must_set_column_with_minumum_if_row_value_is_very_small(self):
+        rows = [
+            ('Jo', 17),
+            ('Ali', 45),
+        ]
+
+        outputs.XLSXOutput().process(rows, header=['Name', 'Other', 'Other2'])
+
+        columns_width = {
+            0: outputs.XLSXOutput().min_width,
+            1: outputs.XLSXOutput().min_width,
+        }
+        calls = [mock.call(i, i, v) for i, v in columns_width.items()]
+
+        self.worksheet_mocked.set_column.assert_has_calls(calls)
+
     def test_call_process_must_call_close(self):
         outputs.XLSXOutput().process(self.iterable_object)
         self.assertTrue(self.workbook_mocked.close.called)
