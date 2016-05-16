@@ -14,18 +14,33 @@ class BaseOutput(metaclass=ABCMeta):
 
     def __init__(self):
         self.filepath = None
-        self.row_cleaner = None
+
+    def header(self, content):
+        self.out(content)
 
     @abstractmethod
-    def process(self, iterator, header=None, footer=None):
-        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
+    def out(self, content):
+        pass
 
-        :param iterator iterator: An iterable object.
-        :param header: Output header.
-        :param footer: Output footer.
-        """
+    def footer(self, content):
+        self.out(content)
 
-        raise NotImplemented()
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    # @abstractmethod
+    # def process(self, iterator, header=None, footer=None):
+    #     """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
+
+    #     :param iterator iterator: An iterable object.
+    #     :param header: Output header.
+    #     :param footer: Output footer.
+    #     """
+
+    #     raise NotImplemented()
 
     def gen_tmpfilename(self):
         """Utility to be used to generate a temporary filename.
@@ -40,36 +55,26 @@ class SVOutput(BaseOutput, metaclass=ABCMeta):
 
     delimiter = None
 
-    def process(self, iterator, header=None, footer=None):
-        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.writer = None
+        self.filepath = None
 
-        :param iterator iterator: An iterable object.
-        :param header: Output header.
-        :param footer: Output footer.
-        """
+    def out(self, content):
+        if isinstance(content, dict):
+            self.writer.writerow([str(i) for i in content.values()])
+        else:
+            self.writer.writerow([str(i) for i in content])
 
+    def __enter__(self):
         self.filepath = self.gen_tmpfilename()
+        self.tmpfile = open(self.filepath, 'w+')
+        self.writer = csv.writer(self.tmpfile, delimiter=self.delimiter)
+        return self
 
-        tmpfile = open(self.filepath, 'w+')
-        with tmpfile:
-            writer = csv.writer(tmpfile, delimiter=self.delimiter)
-
-            if header:
-                writer.writerow([str(i) for i in header])
-
-            for row in iterator:
-                if self.row_cleaner:
-                    row = self.row_cleaner(row)
-
-                if isinstance(row, dict):
-                    writer.writerow([str(a) for a in row.values()])
-                else:
-                    writer.writerow([str(b) for b in row])
-
-            if footer:
-                writer.writerow([str(c) for c in footer])
-
-        return None
+    def __exit__(self, *args, **kwargs):
+        super().__exit__(*args, **kwargs)
+        self.tmpfile.close()
 
 
 class CSVOutput(SVOutput):
@@ -106,62 +111,60 @@ class XLSXOutput(BaseOutput):
     min_width = 8.43
     """Min width used to set column widths"""
 
-    def process(self, iterator, header=None, footer=None):
-        """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
+    def header(self, content):
+        self.has_header = True
+        self._write_row(content, self.header_format)
 
-        :param iterator iterator: An iterable object.
-        :param header: Output header.
-        :param footer: Output footer.
-        """
+    def out(self, content):
+        self._write_row(content)
 
-        self.filepath = self.gen_tmpfilename()
-        workbook = xlsxwriter.Workbook(self.filepath)
-        worksheet = workbook.add_worksheet()
+    def footer(self, content):
+        self._write_row(content, self.footer_format)
 
-        header_format = workbook.add_format({'bold': True, 'bg_color': '#C9C9C9'})
-        footer_format = workbook.add_format({'bold': True, 'bg_color': '#DDDDDD'})
+    def _write_row(self, content, line_format=None):
+        values = content
+        if isinstance(content, dict):
+            values = [a for a in content.values()]
 
-        line_widths = {}
+        self._compute_line_widths(values)
 
-        current_row = 0
-        if header:
-            line_widths = self._compute_line_widths(header, line_widths)
-            worksheet.write_row(current_row, 0, [str(i) for i in header], header_format)
-            current_row += 1
+        if line_format:
+            self.worksheet.write_row(self.current_row, 0, values, line_format)
+        else:
+            self.worksheet.write_row(self.current_row, 0, values)
 
-        for row_num, row in enumerate(iterator, start=current_row):
-            if self.row_cleaner:
-                row = self.row_cleaner(row)
+        self.current_row += 1
 
-            if isinstance(row, dict):
-                values = [a for a in row.values()]
-            else:
-                values = [b for b in row]
-
-            worksheet.write_row(row_num, 0, values)
-
-            line_widths = self._compute_line_widths(values, line_widths)
-            current_row = row_num
-
-        if footer:
-            current_row += 1
-            line_widths = self._compute_line_widths(footer, line_widths)
-            worksheet.write_row(current_row, 0, [str(i) for i in footer], footer_format)
-
-        # Freeze first row
-        worksheet.freeze_panes(1, 0)
-
-        for i, v in line_widths.items():
-            worksheet.set_column(i, i, v)
-
-        workbook.close()
-
-    def _compute_line_widths(self, line, actual_line_widths):
+    def _compute_line_widths(self, line):
         for i, v in enumerate(line):
-            actual_line_widths[i] = max(len(str(v)),
-                                        actual_line_widths.get(i, self.min_width))
+            self.line_widths[i] = max(len(str(v)),
+                                      self.line_widths.get(i, self.min_width))
 
-        return actual_line_widths
+    def __enter__(self):
+        self.filepath = self.gen_tmpfilename()
+        self.workbook = xlsxwriter.Workbook(self.filepath)
+        self.worksheet = self.workbook.add_worksheet()
+
+        self.header_format = self.workbook.add_format({'bold': True, 'bg_color': '#C9C9C9'})
+        self.footer_format = self.workbook.add_format({'bold': True, 'bg_color': '#DDDDDD'})
+
+        self.current_row = 0
+
+        self.line_widths = {}
+
+        self.has_header = False
+
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        # Freeze first row if report has header
+        if self.has_header:
+            self.worksheet.freeze_panes(1, 0)
+
+        for i, v in self.line_widths.items():
+            self.worksheet.set_column(i, i, v)
+
+        self.workbook.close()
 
     def gen_tmpfilename(self):
         """It generates and returns a XLSX temporary file.

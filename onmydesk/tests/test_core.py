@@ -94,7 +94,9 @@ class TSVOutputTestCase(TestCase):
         self.uuid4_mocked = self.patch(
             'onmydesk.core.outputs.uuid4', return_value=uuid4_mocked)
 
+        self.open_result_mocked = mock.MagicMock()
         self.open_mocked = mock.mock_open()
+        self.open_mocked.return_value = self.open_result_mocked
         self.patch('builtins.open', self.open_mocked)
 
         self.writer = mock.MagicMock()
@@ -112,21 +114,33 @@ class TSVOutputTestCase(TestCase):
         return thing
 
     def test_filepath_must_be_a_tsv_file(self):
-        output = outputs.TSVOutput()
-        output.process(self.iterable_object, header=('Name', 'Age'))
+        with outputs.TSVOutput() as output:
+            output.out(('Alisson', 38))
 
-        self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv')
+            self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv')
 
-    def test_process_must_call_open_with_correct_parameters(self):
-        output = outputs.TSVOutput()
-        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
+    def test_out_must_call_open_with_correct_parameters(self):
+        with outputs.TSVOutput() as output:
+            output.out(('Alisson', 38))
 
         self.open_mocked.assert_called_once_with(
             '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+')
 
-    def test_process_must_write_correct_data_in_csv_writer(self):
-        output = outputs.TSVOutput()
-        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
+    def test_context_manager_must_close_file(self):
+        with outputs.TSVOutput() as output:
+            output.out(('Alisson', 38))
+
+            self.assertFalse(self.open_result_mocked.close.called)
+
+        self.assertTrue(self.open_result_mocked.close.called)
+
+    def test_out_must_write_correct_data_in_csv_writer(self):
+        with outputs.TSVOutput() as output:
+            output.header(('Name', 'Age'))
+            for item in self.iterable_object:
+                output.out(item)
+
+            output.footer(('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -143,30 +157,17 @@ class TSVOutputTestCase(TestCase):
             OrderedDict([('name', 'Joao'), ('age', 13)]),
         ]
 
-        output = outputs.TSVOutput()
-        output.process(iterable_object, header=('Name', 'Age'), footer=('test footer',))
+        with outputs.TSVOutput() as output:
+            output.header(('Name', 'Age'))
+            for item in iterable_object:
+                output.out(item)
+
+            output.footer(('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
             mock.call(['Alisson', '38']),
             mock.call(['Joao', '13']),
-            mock.call(['test footer']),
-        ]
-
-        self.assertEqual(self.writer.writerow.mock_calls, expected_calls)
-
-    def test_row_cleaner_must_change_row_content(self):
-        def row_cleaner(row):
-            return ('Test', 99)
-
-        output = outputs.TSVOutput()
-        output.row_cleaner = row_cleaner
-        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
-
-        expected_calls = [
-            mock.call(['Name', 'Age']),
-            mock.call(['Test', '99']),
-            mock.call(['Test', '99']),
             mock.call(['test footer']),
         ]
 
@@ -184,7 +185,9 @@ class CSVOutputTestCase(TestCase):
             ('Joao', 13),
         ]
 
+        self.open_result_mocked = mock.MagicMock()
         self.open_mocked = mock.mock_open()
+        self.open_mocked.return_value = self.open_result_mocked
         self.patch('builtins.open', self.open_mocked)
 
         self.writer_mocked = mock.MagicMock()
@@ -203,18 +206,26 @@ class CSVOutputTestCase(TestCase):
         return thing
 
     def test_filepath_must_be_a_csv_file(self):
-        output = outputs.CSVOutput()
-        output.process(self.iterable_object)
+        with outputs.CSVOutput() as output:
+            output.out(('Alisson', 38))
 
-        expected_filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.csv'
+            self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.csv')
 
-        self.assertEqual(output.filepath, expected_filepath)
+    def test_context_manager_must_close_file(self):
+        with outputs.CSVOutput() as output:
+            output.out(('Alisson', 38))
+
+            self.assertFalse(self.open_result_mocked.close.called)
+
+        self.assertTrue(self.open_result_mocked.close.called)
 
     def test_process_must_write_data_into_a_file(self):
-        output = outputs.CSVOutput()
-        output.process(self.iterable_object,
-                       header=('Name', 'Age'),
-                       footer=('test footer',))
+        with outputs.CSVOutput() as output:
+            output.header(('Name', 'Age'))
+            for item in self.iterable_object:
+                output.out(item)
+
+            output.footer(('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
@@ -231,30 +242,17 @@ class CSVOutputTestCase(TestCase):
             OrderedDict([('name', 'Joao'), ('age', 13)]),
         ]
 
-        output = outputs.CSVOutput()
-        output.process(iterable_object, header=('Name', 'Age'), footer=('test footer',))
+        with outputs.CSVOutput() as output:
+            output.header(('Name', 'Age'))
+            for item in iterable_object:
+                output.out(item)
+
+            output.footer(('test footer',))
 
         expected_calls = [
             mock.call(['Name', 'Age']),
             mock.call(['Alisson', '38']),
             mock.call(['Joao', '13']),
-            mock.call(['test footer']),
-        ]
-
-        self.assertEqual(self.writer_mocked.writerow.mock_calls, expected_calls)
-
-    def test_row_cleaner_must_change_row_content(self):
-        def row_cleaner(row):
-            return ('Test', 99)
-
-        output = outputs.CSVOutput()
-        output.row_cleaner = row_cleaner
-        output.process(self.iterable_object, header=('Name', 'Age'), footer=('test footer',))
-
-        expected_calls = [
-            mock.call(['Name', 'Age']),
-            mock.call(['Test', '99']),
-            mock.call(['Test', '99']),
             mock.call(['test footer']),
         ]
 
@@ -289,18 +287,22 @@ class XLSXOutputTestCase(TestCase):
         self.addCleanup(patcher.stop)
         return thing
 
-    def test_call_process_must_call_lib_constructor(self):
-        outputs.XLSXOutput().process(self.iterable_object)
+    def test_call_out_must_call_lib_constructor(self):
+        with outputs.XLSXOutput() as output:
+            output.out(('Alisson', 38))
 
         self.workbook_const_mocked.assert_called_once_with(
             '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.xlsx')
 
-    def test_call_process_must_call_workbook_add_worksheet(self):
-        outputs.XLSXOutput().process(self.iterable_object)
+    def test_call_out_must_call_workbook_add_worksheet(self):
+        with outputs.XLSXOutput() as output:
+            output.out(('Alisson', 38))
+
         self.assertTrue(self.workbook_mocked.add_worksheet.called)
 
-    def test_call_process_must_call_add_format_to_header_and_footer(self):
-        outputs.XLSXOutput().process(self.iterable_object)
+    def test_call_out_must_call_add_format_to_header_and_footer(self):
+        with outputs.XLSXOutput() as output:
+            output.out(('Alisson', 38))
 
         calls = [
             mock.call({'bold': True, 'bg_color': '#C9C9C9'}),  # header
@@ -309,8 +311,22 @@ class XLSXOutputTestCase(TestCase):
 
         self.assertEqual(self.workbook_mocked.add_format.mock_calls, calls)
 
-    def test_call_process_must_call_write(self):
-        outputs.XLSXOutput().process(self.iterable_object)
+    def test_call_out_must_call_write(self):
+        with outputs.XLSXOutput() as output:
+            output.out(['Alisson', 38])
+            output.out(['Joao', 13])
+
+        expected_calls = [
+            mock.call(0, 0, ['Alisson', 38]),
+            mock.call(1, 0, ['Joao', 13])
+        ]
+
+        self.assertEqual(self.worksheet_mocked.write_row.mock_calls, expected_calls)
+
+    def test_call_out_must_call_write_if_we_give_a_dict(self):
+        with outputs.XLSXOutput() as output:
+            output.out(OrderedDict([('name', 'Alisson'), ('age', 38)]))
+            output.out(OrderedDict([('name', 'Joao'), ('age', 13)]))
 
         expected_calls = [
             mock.call(0, 0, ['Alisson', 38]),
@@ -324,7 +340,12 @@ class XLSXOutputTestCase(TestCase):
         footer_format = mock.MagicMock()
 
         self.workbook_mocked.add_format.side_effect = [header_format, footer_format]
-        outputs.XLSXOutput().process(self.iterable_object, header=['Name', 'Age'], footer=['Total', 51])
+
+        with outputs.XLSXOutput() as output:
+            output.header(['Name', 'Age'])
+            for item in self.iterable_object:
+                output.out(item)
+            output.footer(['Total', 51])
 
         first_call, *_, last_call = self.worksheet_mocked.write_row.mock_calls
 
@@ -333,7 +354,24 @@ class XLSXOutputTestCase(TestCase):
 
         # Footer (1 of header and the content's length)
         footer_line = 1 + 2
-        self.assertEqual(last_call, mock.call(footer_line, 0, ['Total', '51'], footer_format))
+        self.assertEqual(last_call, mock.call(footer_line, 0, ['Total', 51], footer_format))
+
+    def test_call_out_must_freeze_first_line_if_report_received_header(self):
+        with outputs.XLSXOutput() as output:
+            output.header(['Name', 'Age'])
+            for item in self.iterable_object:
+                output.out(item)
+            output.footer(['Total', 51])
+
+        self.worksheet_mocked.freeze_panes.assert_called_once_with(1, 0)
+
+    def test_call_out_must_not_freeze_first_line_if_report_has_no_header(self):
+        with outputs.XLSXOutput() as output:
+            for item in self.iterable_object:
+                output.out(item)
+            output.footer(['Total', 51])
+
+        self.assertFalse(self.worksheet_mocked.freeze_panes.called)
 
     def test_call_must_set_column_width_with_correct_chars_number(self):
         rows = [
@@ -341,7 +379,9 @@ class XLSXOutputTestCase(TestCase):
             ('Alisson dos Reis Perez', 'Test', 'Width of the column must be max chars number'),
         ]
 
-        outputs.XLSXOutput().process(rows, header=['Name', 'Other', 'Other2'])
+        with outputs.XLSXOutput() as output:
+            for item in rows:
+                output.out(item)
 
         columns_width = {
             0: len(rows[1][0]),
@@ -353,13 +393,15 @@ class XLSXOutputTestCase(TestCase):
 
         self.worksheet_mocked.set_column.assert_has_calls(calls)
 
-    def test_call_process_must_set_column_with_minumum_if_row_value_is_very_small(self):
+    def test_call_out_must_set_column_with_minumum_if_row_value_is_very_small(self):
         rows = [
             ('Jo', 17),
             ('Ali', 45),
         ]
 
-        outputs.XLSXOutput().process(rows, header=['Name', 'Other', 'Other2'])
+        with outputs.XLSXOutput() as output:
+            for item in rows:
+                output.out(item)
 
         columns_width = {
             0: outputs.XLSXOutput().min_width,
@@ -369,21 +411,19 @@ class XLSXOutputTestCase(TestCase):
 
         self.worksheet_mocked.set_column.assert_has_calls(calls)
 
-    def test_call_process_must_call_close(self):
-        outputs.XLSXOutput().process(self.iterable_object)
+    def test_call_out_must_call_close(self):
+        with outputs.XLSXOutput() as output:
+            for item in self.iterable_object:
+                output.out(item)
+
         self.assertTrue(self.workbook_mocked.close.called)
 
 
 class BaseReportTestCase(TestCase):
 
     def setUp(self):
-        self.dataset_mocked = mock.MagicMock()
-        self.dataset_mocked.iterate.return_value = [
-            ('Alisson', 38),
-            ('Joao', 13),
-        ]
-        self.dataset_mocked.__enter__.return_value = self.dataset_mocked
-        self.output_mocked = self._patch('onmydesk.core.reports.outputs.TSVOutput')
+        self._create_dataset()
+        self._create_output()
 
         self.header = ('Name', 'Age')
         self.footer = ('My footer',)
@@ -398,6 +438,19 @@ class BaseReportTestCase(TestCase):
         self.params = dict(age_filter=25)
         self.report = self.my_report_class(params=self.params)
 
+    def _create_dataset(self):
+        self.dataset_mocked = mock.MagicMock()
+        self.rows = [
+            ('Alisson', 38),
+            ('Joao', 13),
+        ]
+        self.dataset_mocked.iterate.return_value = self.rows
+        self.dataset_mocked.__enter__.return_value = self.dataset_mocked
+
+    def _create_output(self):
+        self.output_mocked = mock.MagicMock()
+        self.output_mocked.__enter__.return_value = self.output_mocked
+
     def _patch(self, *args, **kwargs):
         patcher = mock.patch(*args, **kwargs)
         thing = patcher.start()
@@ -407,30 +460,58 @@ class BaseReportTestCase(TestCase):
     def test_process_must_call_output_process_with_dataset(self):
         self.report.process()
 
-        self.output_mocked.process.assert_called_once_with(
-            self.dataset_mocked.iterate.return_value,
-            header=self.header,
-            footer=self.footer)
+        self.output_mocked.header.assert_called_once_with(self.header)
+
+        calls = [mock.call(i) for i in self.rows]
+        self.assertEqual(self.output_mocked.out.mock_calls, calls)
+
+        self.output_mocked.footer.assert_called_once_with(self.footer)
+
+        self.assertTrue(self.output_mocked.__enter__.called)
+        self.assertTrue(self.output_mocked.__exit__.called)
 
     def test_process_must_call_iterate_from_dataset_with_params(self):
         self.report.process()
         self.dataset_mocked.iterate.assert_called_once_with(params=self.params)
 
+    def test_process_must_use_row_cleaner_for_each_row_from_dataset(self):
+        def my_row_cleaner(self, row):
+            return ('Marcondes', 18)
+
+        self.my_report_class.row_cleaner = my_row_cleaner
+
+        self.params = dict(age_filter=25)
+
+        self.report = self.my_report_class(params=self.params)
+        self.report.process()
+
+        rows = [('Marcondes', 18)] * len(self.rows)
+        calls = [mock.call(i) for i in rows]
+
+        self.assertEqual(self.output_mocked.out.mock_calls, calls)
+
 
 class SQLReportTestCase(TestCase):
 
     def setUp(self):
-        self.sqldataset_mocked = mock.MagicMock()
-        self.sqldataset_mocked.iterate.return_value = [
-            (1,),
-            (2,),
+        self.items = [
+            (1, 'Test1'),
+            (2, 'Test2'),
         ]
 
+        self.sqldataset_mocked = mock.MagicMock()
+        self.sqldataset_mocked.iterate.return_value = self.items
+        self.sqldataset_mocked.__enter__.return_value = self.sqldataset_mocked
         self.sqldataset_class_mocked = self.patch('onmydesk.core.reports.datasets.SQLDataset',
                                                   return_value=self.sqldataset_mocked)
 
-        self.tsvoutput_mocked = self.patch('onmydesk.core.reports.outputs.TSVOutput')
-        self.tsvoutput_mocked.filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv'
+        self._create_output()
+
+    def _create_output(self):
+        self.output_mocked = mock.MagicMock()
+        self.output_mocked.filepath = '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv'
+        self.output_mocked.__enter__ = mock.MagicMock(
+            return_value=self.output_mocked)
 
     def patch(self, *args, **kwargs):
         patcher = mock.patch(*args, **kwargs)
@@ -442,21 +523,17 @@ class SQLReportTestCase(TestCase):
         report = self._create_report()
         report.process()
 
-        with self.sqldataset_mocked as ds:
-            self.tsvoutput_mocked.process.assert_called_once_with(
-                ds.iterate(), header=report.header, footer=report.footer)
+        calls = [mock.call(i) for i in self.items]
+        self.assertEqual(self.output_mocked.out.mock_calls, calls)
+
+        self.output_mocked.header.assert_called_once_with(report.header)
+        self.output_mocked.footer.assert_called_once_with(report.footer)
 
     def test_process_must_fill_output_filepaths(self):
         report = self._create_report()
         report.process()
 
-        self.assertEqual(report.output_filepaths, [self.tsvoutput_mocked.filepath])
-
-    def test_process_must_fill_row_cleaner_function_to_output_instance(self):
-        report = self._create_report()
-        report.process()
-
-        self.assertEqual(self.tsvoutput_mocked.row_cleaner, report.row_cleaner)
+        self.assertEqual(report.output_filepaths, [self.output_mocked.filepath])
 
     def test_dataset_attr_must_return_dataset_with_db_alias_from_report(self):
         report = self._create_report()
@@ -469,7 +546,7 @@ class SQLReportTestCase(TestCase):
 
     def _create_report(self):
         report = reports.SQLReport()
-        report.outputs = (self.tsvoutput_mocked,)
+        report.outputs = (self.output_mocked,)
         report.query = 'SELECT * FROM test_table'
         report.header = ('Name', 'Age')
         report.footer = ('Footer',)

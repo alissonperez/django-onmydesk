@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from contextlib import ExitStack
 
 from onmydesk.core import datasets
 from onmydesk.core import outputs
@@ -38,11 +39,22 @@ class BaseReport(metaclass=ABCMeta):
         """Process report and store output filepaths in :attr:`output_filepaths`"""
 
         with self.dataset as ds:
-            for output in self.outputs:
+            with ExitStack() as stack:
+                outputs = [stack.enter_context(o) for o in self.outputs]
+
+                for output in outputs:
+                    output.header(self.header)
+
                 dataset_iterator = ds.iterate(params=self.params)
-                output.row_cleaner = self.row_cleaner
-                output.process(dataset_iterator, header=self.header, footer=self.footer)
-                self.output_filepaths.append(output.filepath)
+                for row in dataset_iterator:
+                    row = self.row_cleaner(row)
+                    for output in outputs:
+                        output.out(row)
+
+                for output in outputs:
+                    output.footer(self.footer)
+
+                self.output_filepaths = [o.filepath for o in outputs]
 
     def row_cleaner(self, row):
         """
