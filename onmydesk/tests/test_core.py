@@ -474,6 +474,18 @@ class BaseReportTestCase(TestCase):
         self.report.process()
         self.dataset_mocked.iterate.assert_called_once_with(params=self.params)
 
+    def test_process_must_not_call_output_header_if_report_has_no_header(self):
+        self.report.header = None
+        self.report.process()
+
+        self.assertFalse(self.output_mocked.header.called)
+
+    def test_process_must_not_call_output_footer_if_report_has_no_header(self):
+        self.report.footer = None
+        self.report.process()
+
+        self.assertFalse(self.output_mocked.footer.called)
+
     def test_process_must_use_row_cleaner_for_each_row_from_dataset(self):
         def my_row_cleaner(self, row):
             return ('Marcondes', 18)

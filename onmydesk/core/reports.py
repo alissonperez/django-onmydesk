@@ -53,8 +53,9 @@ class BaseReport(metaclass=ABCMeta):
 
         :param list outputs: A list of output objects.'''
 
-        for output in outputs:
-            output.header(self.header)
+        if self.header:
+            for output in outputs:
+                output.header(self.header)
 
     def _write_content(self, outputs, items):
         '''Write a normal content in outputs
@@ -72,8 +73,9 @@ class BaseReport(metaclass=ABCMeta):
 
         :param list outputs: A list of output objects.'''
 
-        for output in outputs:
-            output.footer(self.footer)
+        if self.footer:
+            for output in outputs:
+                output.footer(self.footer)
 
     def row_cleaner(self, row):
         """
