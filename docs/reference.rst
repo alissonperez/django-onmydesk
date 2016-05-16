@@ -38,4 +38,5 @@ onmydesk.core.reports
 
 .. automodule:: onmydesk.core.reports
    :members:
+   :private-members:
    :special-members:

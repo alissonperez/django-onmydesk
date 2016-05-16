@@ -42,19 +42,38 @@ class BaseReport(metaclass=ABCMeta):
             with ExitStack() as stack:
                 outputs = [stack.enter_context(o) for o in self.outputs]
 
-                for output in outputs:
-                    output.header(self.header)
-
-                dataset_iterator = ds.iterate(params=self.params)
-                for row in dataset_iterator:
-                    row = self.row_cleaner(row)
-                    for output in outputs:
-                        output.out(row)
-
-                for output in outputs:
-                    output.footer(self.footer)
+                self._write_header(outputs)
+                self._write_content(outputs, ds.iterate(params=self.params))
+                self._write_footer(outputs)
 
                 self.output_filepaths = [o.filepath for o in outputs]
+
+    def _write_header(self, outputs):
+        '''Write a header in outputs
+
+        :param list outputs: A list of output objects.'''
+
+        for output in outputs:
+            output.header(self.header)
+
+    def _write_content(self, outputs, items):
+        '''Write a normal content in outputs
+
+        :param list outputs: A list of output objects.
+        :param iterable items: Itens (rows) to be written in outputs.'''
+
+        for row in items:
+            row = self.row_cleaner(row)
+            for output in outputs:
+                output.out(row)
+
+    def _write_footer(self, outputs):
+        '''Write a footer content in outputs
+
+        :param list outputs: A list of output objects.'''
+
+        for output in outputs:
+            output.footer(self.footer)
 
     def row_cleaner(self, row):
         """
