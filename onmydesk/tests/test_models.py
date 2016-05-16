@@ -329,3 +329,14 @@ class SchedulerTestCase(TestCase):
         with mock.patch('onmydesk.models.send_mail') as send_mail_mocked:
             scheduler.process()
             self.assertFalse(send_mail_mocked.called)
+
+    def test_process_must_use_given_reference_date(self):
+        self._patch('onmydesk.models.Report.process')
+
+        scheduler = Scheduler(report='my_report_class')
+        scheduler.set_params({'my_date': 'D-2', 'other_filter': 'other_value'})
+
+        my_date = date(2016, 5, 10)
+        with mock.patch('onmydesk.models.Report.set_params') as set_params:
+            scheduler.process(reference_date=my_date)
+            set_params.assert_called_once_with({'my_date': date(2016, 5, 8), 'other_filter': 'other_value'})

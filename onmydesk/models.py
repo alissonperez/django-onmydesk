@@ -245,7 +245,7 @@ class Scheduler(models.Model):
 
         return None
 
-    def process(self):
+    def process(self, reference_date=None):
         """Process scheduler creating and returing a report.
         After processing, this method tries to notify e-mails filled in notify_emails field.
 
@@ -257,7 +257,7 @@ class Scheduler(models.Model):
                         status=Report.STATUS_PROCESSING,
                         created_by=self.created_by)
 
-        report.set_params(self.get_processed_params())
+        report.set_params(self.get_processed_params(reference_date))
         report.save()
 
         report.process()

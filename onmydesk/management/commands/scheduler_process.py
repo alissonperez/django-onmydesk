@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 scheduler.id, i, count))
 
             try:
-                scheduler.process()
+                scheduler.process(reference_date=today)
                 self.stdout.write('Scheduler #{} processed'.format(scheduler.id))
             except Exception as e:
                 self.stderr.write('Error processing scheduler #{}: {}'.format(
