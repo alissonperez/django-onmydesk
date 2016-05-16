@@ -7,7 +7,21 @@ from abc import ABCMeta, abstractmethod
 
 
 class BaseOutput(metaclass=ABCMeta):
-    """An abstract representation of an Output class."""
+    """An abstract representation of an Output class.
+
+    We need to use instances of this classes with context manager. E.g.::
+
+        from onmydesk.core.outputs import XLSXOutput
+
+        myout = XLSXOutput()
+
+        with myout as output:
+            output.header(['Name', 'Age'])
+            output.out(['Alisson', 39])
+            output.out(['Joao', 16])
+            output.footer(['Total', 55])
+            print(output.filepath)
+    """
 
     filepath = None
     """Filepath with output result which is filled by :func:`process`."""
@@ -16,13 +30,21 @@ class BaseOutput(metaclass=ABCMeta):
         self.filepath = None
 
     def header(self, content):
+        """Output a header content
+        :param mixed content: Content to be written"""
+
         self.out(content)
 
     @abstractmethod
     def out(self, content):
-        pass
+        """Output a normal content
+        :param mixed content: Content to be written"""
+
+        raise NotImplemented()
 
     def footer(self, content):
+        """Output a footer content
+        :param mixed content: Content to be written"""
         self.out(content)
 
     def __enter__(self):
@@ -30,17 +52,6 @@ class BaseOutput(metaclass=ABCMeta):
 
     def __exit__(self, exc_type, exc_value, traceback):
         pass
-
-    # @abstractmethod
-    # def process(self, iterator, header=None, footer=None):
-    #     """Process the output given a `iterator`, `header` and `footer`. The result are stored in :attr:`filepath`.
-
-    #     :param iterator iterator: An iterable object.
-    #     :param header: Output header.
-    #     :param footer: Output footer.
-    #     """
-
-    #     raise NotImplemented()
 
     def gen_tmpfilename(self):
         """Utility to be used to generate a temporary filename.
@@ -112,13 +123,22 @@ class XLSXOutput(BaseOutput):
     """Min width used to set column widths"""
 
     def header(self, content):
+        """Output a header content
+        :param mixed content: Content to be written"""
+
         self.has_header = True
         self._write_row(content, self.header_format)
 
     def out(self, content):
+        """Output a normal content
+        :param mixed content: Content to be written"""
+
         self._write_row(content)
 
     def footer(self, content):
+        """Output a footer content
+        :param mixed content: Content to be written"""
+
         self._write_row(content, self.footer_format)
 
     def _write_row(self, content, line_format=None):
