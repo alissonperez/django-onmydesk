@@ -26,6 +26,9 @@ class BaseOutput(metaclass=ABCMeta):
     filepath = None
     """Filepath with output result which is filled by :func:`process`."""
 
+    file_extension = None
+    """File extension to be used on file name output. E.g.: 'csv'"""
+
     def __init__(self):
         self.filepath = None
 
@@ -58,7 +61,10 @@ class BaseOutput(metaclass=ABCMeta):
 
         :returns: Temporary filepath.
         :rtype: str"""
-        return tempfile.gettempdir() + '/' + uuid4().hex
+        return '{}/{}.{}'.format(
+            tempfile.gettempdir(),
+            uuid4().hex,
+            self.file_extension)
 
 
 class SVOutput(BaseOutput, metaclass=ABCMeta):
@@ -92,32 +98,20 @@ class CSVOutput(SVOutput):
     """An output to generate CSV files (files with cols separated by comma)."""
 
     delimiter = ','
-
-    def gen_tmpfilename(self):
-        """It generates and returns a CSV temporary file.
-
-        :returns: Temporary CSV file.
-        :rtype: str"""
-
-        return super().gen_tmpfilename() + '.csv'
+    file_extension = 'csv'
 
 
 class TSVOutput(SVOutput):
     """An output to generate TSV files (files with cols separated by tabs)."""
 
     delimiter = '\t'
-
-    def gen_tmpfilename(self):
-        """It generates and returns a tsv temporary file.
-
-        :returns: Temporary TSV file.
-        :rtype: str"""
-
-        return super().gen_tmpfilename() + '.tsv'
+    file_extension = 'tsv'
 
 
 class XLSXOutput(BaseOutput):
     """Output to generate XLSX files."""
+
+    file_extension = 'xlsx'
 
     min_width = 8.43
     """Min width used to set column widths"""
@@ -185,11 +179,3 @@ class XLSXOutput(BaseOutput):
             self.worksheet.set_column(i, i, v)
 
         self.workbook.close()
-
-    def gen_tmpfilename(self):
-        """It generates and returns a XLSX temporary file.
-
-        :returns: Temporary XLSX file.
-        :rtype: str"""
-
-        return super().gen_tmpfilename() + '.xlsx'
