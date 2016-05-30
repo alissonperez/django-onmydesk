@@ -511,12 +511,15 @@ class BaseReportTestCase(TestCase):
         self.header = ('Name', 'Age')
         self.footer = ('My footer',)
 
+        self.report_name = 'Monthly something'
+
         self.my_report_class = type('my_report_class',
                                     (reports.BaseReport,),
                                     dict(dataset=self.dataset_mocked,
                                          outputs=[self.output_mocked],
                                          header=self.header,
-                                         footer=self.footer))
+                                         footer=self.footer,
+                                         name=self.report_name))
 
         self.params = dict(age_filter=25)
         self.report = self.my_report_class(params=self.params)
@@ -532,6 +535,7 @@ class BaseReportTestCase(TestCase):
 
     def _create_output(self):
         self.output_mocked = mock.MagicMock()
+        self.output_mocked.name = None
         self.output_mocked.__enter__.return_value = self.output_mocked
 
     def _patch(self, *args, **kwargs):
@@ -584,6 +588,14 @@ class BaseReportTestCase(TestCase):
         calls = [mock.call(i) for i in rows]
 
         self.assertEqual(self.output_mocked.out.mock_calls, calls)
+
+    def test_process_must_set_report_name_on_outputs(self):
+        self.assertIsNone(self.output_mocked.name)
+
+        self.report = self.my_report_class(params=self.params)
+        self.report.process()
+
+        self.assertEqual(self.output_mocked.name, self.report.name)
 
 
 class SQLReportTestCase(TestCase):

@@ -38,6 +38,9 @@ class BaseReport(metaclass=ABCMeta):
     def process(self):
         """Process report and store output filepaths in :attr:`output_filepaths`"""
 
+        for output in self.outputs:
+            output.name = self.name
+
         with self.dataset as ds:
             with ExitStack() as stack:
                 outputs = [stack.enter_context(o) for o in self.outputs]
