@@ -1,7 +1,10 @@
 import tempfile
 import csv
 import xlsxwriter
+from slugify import slugify
+from datetime import date
 
+from hashlib import sha224
 from uuid import uuid4
 from abc import ABCMeta, abstractmethod
 
@@ -28,6 +31,9 @@ class BaseOutput(metaclass=ABCMeta):
 
     file_extension = None
     """File extension to be used on file name output. E.g.: 'csv'"""
+
+    name = None
+    """Name used to compose output filename"""
 
     def __init__(self):
         self.filepath = None
@@ -61,10 +67,20 @@ class BaseOutput(metaclass=ABCMeta):
 
         :returns: Temporary filepath.
         :rtype: str"""
-        return '{}/{}.{}'.format(
-            tempfile.gettempdir(),
-            uuid4().hex,
+
+        name = ''
+        if self.name:
+            name = '{}-'.format(
+                slugify(self.name, to_lower=True)[:30].strip('-'))
+
+        filename = '{}{}-{}.{}'.format(
+            name,
+            date.today().strftime('%Y-%m-%d'),
+            sha224(uuid4().hex.encode()).hexdigest()[:7],
             self.file_extension)
+
+        return '{}/{}'.format(
+            tempfile.gettempdir(), filename)
 
 
 class SVOutput(BaseOutput, metaclass=ABCMeta):

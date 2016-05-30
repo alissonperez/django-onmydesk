@@ -1,5 +1,8 @@
+from datetime import date
 from unittest import mock
+from hashlib import sha224
 from collections import OrderedDict
+from slugify import slugify
 
 from django.test import TestCase
 
@@ -83,6 +86,82 @@ class SQLDatasetTestCase(TestCase):
         return mocked_cursor
 
 
+class BaseOutputTestCase(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        def out(self, content):
+            pass
+
+        cls.output_class = type('MyOutput', (outputs.BaseOutput,),
+                                {'out': out,
+                                 'file_extension': 'txt'})
+
+    def setUp(self):
+        self.uuid4_obj = mock.MagicMock()
+        self.uuid4_obj.hex = 'kjaljjp1ojq2q3jlqjljql23jlqj3ql2'
+
+        self._patch('onmydesk.core.outputs.tempfile.gettempdir', return_value='/tmp')
+
+    def _patch(self, *args, **kwargs):
+        patcher = mock.patch(*args, **kwargs)
+        thing = patcher.start()
+        self.addCleanup(patcher.stop)
+        return thing
+
+    def test_gen_tmpfilename_must_return_string(self):
+        obj = self.output_class()
+        self.assertIsInstance(obj.gen_tmpfilename(), str)
+
+    def test_gen_tmpfilename_must_add_current_date(self):
+        obj = self.output_class()
+
+        date_str = date.today().strftime('%Y-%m-%d')
+        hash_used = sha224(self.uuid4_obj.hex.encode()).hexdigest()[:7]
+        expected_filename = '{}/{}-{}.{}'.format(
+            '/tmp',
+            date_str,
+            hash_used,
+            'txt')
+
+        with mock.patch('onmydesk.core.outputs.uuid4', return_value=self.uuid4_obj):
+            self.assertEqual(expected_filename, obj.gen_tmpfilename())
+
+    def test_gen_tmpfilename_must_include_name_slugfied_if_param_filled(self):
+        obj = self.output_class()
+        obj.name = 'My report about Something'
+
+        date_str = date.today().strftime('%Y-%m-%d')
+        hash_used = sha224(self.uuid4_obj.hex.encode()).hexdigest()[:7]
+        expected_filename = '{}/{}-{}-{}.{}'.format(
+            '/tmp',
+            slugify(obj.name, to_lower=True),
+            date_str,
+            hash_used,
+            'txt')
+
+        with mock.patch('onmydesk.core.outputs.uuid4', return_value=self.uuid4_obj):
+            self.assertEqual(expected_filename, obj.gen_tmpfilename())
+
+    def test_gen_tmpfilename_must_include_name_slugfied_with_len_limit(self):
+        obj = self.output_class()
+        obj.name = 'My report about Something with a long report name'
+
+        date_str = date.today().strftime('%Y-%m-%d')
+        hash_used = sha224(self.uuid4_obj.hex.encode()).hexdigest()[:7]
+        expected_filename = '{}/{}-{}-{}.{}'.format(
+            '/tmp',
+            slugify(obj.name, to_lower=True)[:30].strip('-'),
+            date_str,
+            hash_used,
+            'txt')
+
+        with mock.patch('onmydesk.core.outputs.uuid4', return_value=self.uuid4_obj):
+            self.assertEqual(expected_filename, obj.gen_tmpfilename())
+
+
 class TSVOutputTestCase(TestCase):
 
     def setUp(self):
@@ -117,14 +196,16 @@ class TSVOutputTestCase(TestCase):
         with outputs.TSVOutput() as output:
             output.out(('Alisson', 38))
 
-            self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv')
+            *_, extension = output.filepath.split('.')
+
+            self.assertEqual(extension, 'tsv')
 
     def test_out_must_call_open_with_correct_parameters(self):
         with outputs.TSVOutput() as output:
             output.out(('Alisson', 38))
+            filename = output.filepath
 
-        self.open_mocked.assert_called_once_with(
-            '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.tsv', 'w+')
+        self.open_mocked.assert_called_once_with(filename, 'w+')
 
     def test_context_manager_must_close_file(self):
         with outputs.TSVOutput() as output:
@@ -209,7 +290,9 @@ class CSVOutputTestCase(TestCase):
         with outputs.CSVOutput() as output:
             output.out(('Alisson', 38))
 
-            self.assertEqual(output.filepath, '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.csv')
+            *_, extension = output.filepath.split('.')
+
+            self.assertEqual(extension, 'csv')
 
     def test_context_manager_must_close_file(self):
         with outputs.CSVOutput() as output:
@@ -292,7 +375,7 @@ class XLSXOutputTestCase(TestCase):
             output.out(('Alisson', 38))
 
         self.workbook_const_mocked.assert_called_once_with(
-            '/tmp/asjkdlajksdlakjdlakjsdljalksdjla.xlsx')
+            output.filepath)
 
     def test_call_out_must_call_workbook_add_worksheet(self):
         with outputs.XLSXOutput() as output:
