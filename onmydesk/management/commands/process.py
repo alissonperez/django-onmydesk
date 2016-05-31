@@ -4,6 +4,7 @@ from os import path
 from django.core.management.base import BaseCommand
 
 import filelock
+import traceback
 from onmydesk.models import Report
 
 
@@ -18,6 +19,7 @@ class Command(BaseCommand):
         try:
             self._process_with_lock(options.get('ids'))
         except Exception as e:
+            traceback.print_exc()
             self.stdout.write('Error: {}'.format(str(e)))
 
     def _process_with_lock(self, ids):
@@ -46,6 +48,7 @@ class Command(BaseCommand):
                 report.save()
                 self.stdout.write('Report #{} processed'.format(report.id))
             except Exception as e:
+                traceback.print_exc()
                 self.stderr.write('Error processing report #{}: {}'.format(
                     report.id, str(e)))
 

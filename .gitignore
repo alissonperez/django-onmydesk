@@ -5,6 +5,9 @@ __pycache__
 .coverage
 .htmlcov
 
+# IDEs
+.idea/
+
 # OSX
 .DS_Store
 
